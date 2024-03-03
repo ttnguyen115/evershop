@@ -1,7 +1,7 @@
 const { request } = require('express');
 const { select } = require('@evershop/postgres-query-builder');
-const { compareSync } = require('bcryptjs');
 const { pool } = require('../../lib/postgres/connection');
+const { comparePassword } = require('../../lib/util/passwordHelper');
 
 module.exports = () => {
   request.loginUserWithEmail = async function loginUserWithEmail(
@@ -9,12 +9,14 @@ module.exports = () => {
     password,
     callback
   ) {
+    // Escape the email to prevent SQL injection
+    const userEmail = email.replace(/%/g, '\\%');
     const user = await select()
       .from('admin_user')
-      .where('email', '=', email)
+      .where('email', 'ILIKE', userEmail)
       .and('status', '=', 1)
       .load(pool);
-    const result = compareSync(password, user ? user.password : '');
+    const result = comparePassword(password, user ? user.password : '');
     if (!user || !result) {
       throw new Error('Invalid email or password');
     }

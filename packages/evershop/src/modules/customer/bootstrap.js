@@ -1,24 +1,62 @@
 const { request } = require('express');
-const { Cart } = require('../checkout/services/cart/Cart');
+const config = require('config');
 const { pool } = require('@evershop/evershop/src/lib/postgres/connection');
 const { select } = require('@evershop/postgres-query-builder');
-const { compareSync } = require('bcryptjs');
+const { comparePassword } = require('../../lib/util/passwordHelper');
+const { translate } = require('../../lib/locale/translate/translate');
+const { addProcessor } = require('../../lib/util/registry');
 
 module.exports = () => {
-  Cart.addField('customer_id', function resolver() {
-    return this.dataSource?.customer_id ?? null;
-  });
-
-  Cart.addField('customer_group_id', function resolver() {
-    return this.dataSource?.customer_group_id ?? null;
-  });
-
-  Cart.addField('customer_email', function resolver() {
-    return this.dataSource?.customer_email ?? null;
-  });
-
-  Cart.addField('customer_full_name', function resolver() {
-    return this.dataSource?.customer_full_name ?? null;
+  addProcessor('cartFields', (fields) => {
+    fields.push({
+      key: 'customer_id',
+      resolvers: [
+        async function resolver() {
+          const triggeredField = this.getTriggeredField();
+          const requestedValue = this.getRequestedValue();
+          return triggeredField === 'customer_id'
+            ? requestedValue
+            : this.getData('customer_id');
+        }
+      ]
+    });
+    fields.push({
+      key: 'customer_group_id',
+      resolvers: [
+        async function resolver() {
+          const triggeredField = this.getTriggeredField();
+          const requestedValue = this.getRequestedValue();
+          return triggeredField === 'customer_group_id'
+            ? requestedValue
+            : this.getData('customer_group_id');
+        }
+      ]
+    });
+    fields.push({
+      key: 'customer_email',
+      resolvers: [
+        async function resolver() {
+          const triggeredField = this.getTriggeredField();
+          const requestedValue = this.getRequestedValue();
+          return triggeredField === 'customer_email'
+            ? requestedValue
+            : this.getData('customer_email');
+        }
+      ]
+    });
+    fields.push({
+      key: 'customer_full_name',
+      resolvers: [
+        async function resolver() {
+          const triggeredField = this.getTriggeredField();
+          const requestedValue = this.getRequestedValue();
+          return triggeredField === 'customer_full_name'
+            ? requestedValue
+            : this.getData('customer_full_name');
+        }
+      ]
+    });
+    return fields;
   });
 
   /**
@@ -32,15 +70,17 @@ module.exports = () => {
     password,
     callback
   ) {
+    // Escape the email to prevent SQL injection
+    const customerEmail = email.replace(/%/g, '\\%');
     const customer = await select()
       .from('customer')
-      .where('email', '=', email)
+      .where('email', 'ILIKE', customerEmail)
       .and('status', '=', 1)
       .load(pool);
 
-    const result = compareSync(password, customer ? customer.password : '');
+    const result = comparePassword(password, customer ? customer.password : '');
     if (!customer || !result) {
-      throw new Error('Invalid email or password');
+      throw new Error(translate('Invalid email or password'));
     }
     this.session.customerID = customer.customer_id;
     // Delete the password field
@@ -64,4 +104,55 @@ module.exports = () => {
   request.getCurrentCustomer = function getCurrentCustomer() {
     return this.locals?.customer;
   };
+
+  // Customer configuration
+  const customerConfig = {
+    addressSchema: {
+      type: 'object',
+      properties: {
+        full_name: {
+          type: 'string'
+        },
+        telephone: {
+          type: ['string', 'number']
+        },
+        address_1: {
+          type: 'string'
+        },
+        address_2: {
+          type: 'string'
+        },
+        city: {
+          type: 'string'
+        },
+        province: {
+          type: 'string'
+        },
+        country: {
+          type: 'string',
+          pattern: '^[A-Z]{2}$'
+        },
+        postcode: {
+          type: ['string', 'number']
+        }
+      },
+      required: [
+        'full_name',
+        'telephone',
+        'address_1',
+        'city',
+        'country',
+        'postcode'
+      ],
+      errorMessage: {
+        properties: {
+          full_name: translate('Full name is required'),
+          telephone: translate('Telephone is missing or invalid'),
+          country: translate('Country is missing or invalid')
+        }
+      },
+      additionalProperties: true
+    }
+  };
+  config.util.setModuleDefaults('customer', customerConfig);
 };

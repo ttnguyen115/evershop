@@ -1,20 +1,20 @@
 const { select } = require('@evershop/postgres-query-builder');
 const {
-  setContextValue,
-  getContextValue
-} = require('../../../graphql/services/contextHelper');
-const { getCartByUUID } = require('../../services/getCartByUUID');
-const { saveCart } = require('../../services/saveCart');
-const {
   INVALID_PAYLOAD,
   INTERNAL_SERVER_ERROR,
   OK
 } = require('@evershop/evershop/src/lib/util/httpStatus');
 const { pool } = require('@evershop/evershop/src/lib/postgres/connection');
-const { createNewCart } = require('../../services/createNewCart');
 const {
   translate
 } = require('@evershop/evershop/src/lib/locale/translate/translate');
+const {
+  setContextValue,
+  getContextValue
+} = require('../../../graphql/services/contextHelper');
+const { getCartByUUID } = require('../../services/getCartByUUID');
+const { saveCart } = require('../../services/saveCart');
+const { createNewCart } = require('../../services/createNewCart');
 
 module.exports = async (request, response, delegate, next) => {
   try {
@@ -49,11 +49,7 @@ module.exports = async (request, response, delegate, next) => {
     }
 
     // If everything is fine, add the product to the cart
-    const item = await cart.addItem({
-      cart_id: cart.getData('cart_id'),
-      product_id: product.product_id,
-      qty: parseInt(qty, 10)
-    });
+    const item = await cart.addItem(product.product_id, parseInt(qty, 10));
     await saveCart(cart);
     // Set the new cart id to the context, so next middleware can use it
     setContextValue(request, 'cartId', cart.getData('uuid'));

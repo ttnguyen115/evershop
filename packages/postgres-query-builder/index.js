@@ -1,3 +1,4 @@
+/* eslint-disable */
 const uniqid = require('uniqid');
 const { toString } = require('./toString');
 const { fieldResolve } = require('./fieldResolve');
@@ -12,7 +13,13 @@ class Select {
     // Resolve field name
     let f = '';
     if (isValueASQL(field) || field === '*') {
-      f += `${field}`;
+      // If field is an object has property "isSQL" and it's true
+      // or field is a string and it's "*"
+      if (typeof field === 'object' && field.isSQL === true) {
+        f = field.value;
+      } else {
+        f = field;
+      }
     } else {
       f += `"${field}"`;
     }
@@ -639,12 +646,29 @@ class SelectQuery extends Query {
       let { rows } = await connection.query({ text: sql, values: binding });
       return rows;
     } catch (e) {
+      if (connection.INTRANSACTION === true) {
+        throw e;
+      }
       if (e.code === '42703') {
         this.removeOrderBy();
         return await super.execute(connection, false);
       } else if (e.code.toLowerCase() === '22p02') {
-        // In case of invalid input type, we consider it as empty result
-        return [];
+        const countField = this._select._fields.find((f) =>
+          /COUNT\s*\(/i.test(f)
+        );
+        if (countField) {
+          let alias = countField.match(/(?<=as\s)(.*)/i);
+          if (alias) {
+            alias = alias[0].trim();
+            // Remove the single quote and double quote if any
+            alias = alias.replace(/'/g, '').replace(/"/g, '');
+          } else {
+            alias = 'count';
+          }
+          return [{ [alias]: 0 }];
+        } else {
+          return [];
+        }
       } else {
         throw e;
       }
@@ -759,7 +783,7 @@ class UpdateQuery extends Query {
   async execute(connection, releaseConnection = true) {
     const rows = await super.execute(connection, releaseConnection);
     const updatedRow = rows[0];
-    if (this._primaryColumn) {
+    if (this._primaryColumn && updatedRow) {
       updatedRow['updatedId'] = updatedRow[this._primaryColumn];
     }
     return updatedRow;

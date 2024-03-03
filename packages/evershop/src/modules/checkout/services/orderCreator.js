@@ -117,7 +117,7 @@ exports.createOrder = async function createOrder(cart) {
     // Save the billing address
     const cartBillingAddress = await select()
       .from('cart_address')
-      .where('cart_address_id', '=', cart.getData('shipping_address_id'))
+      .where('cart_address_id', '=', cart.getData('billing_address_id'))
       .load(connection);
     delete cartBillingAddress.uuid;
     const billAddr = await insert('order_address')
@@ -148,7 +148,7 @@ exports.createOrder = async function createOrder(cart) {
 
     const order = await insert('order')
       .given({
-        ...cart.export(),
+        ...cart.exportData(),
         uuid: uuidv4().replace(/-/g, ''),
         order_number:
           10000 + parseInt(previous[0] ? previous[0].order_id : 0, 10) + 1,

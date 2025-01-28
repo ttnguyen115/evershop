@@ -5,6 +5,7 @@ const { createBaseConfig } = require('../createBaseConfig');
 const { getComponentsByRoute } = require('../../componee/getComponentsByRoute');
 const { CONSTANTS } = require('../../helpers');
 const { GraphqlPlugin } = require('../plugins/GraphqlPlugin');
+const { getEnabledWidgets } = require('../../util/getEnabledWidgets');
 
 module.exports.createConfigClient = function createConfigClient(route) {
   const config = createBaseConfig(false);
@@ -21,7 +22,7 @@ module.exports.createConfigClient = function createConfigClient(route) {
         ),
         options: {
           getComponents: () => getComponentsByRoute(route),
-          routeId: route.id
+          route
         }
       }
     ]
@@ -50,7 +51,13 @@ module.exports.createConfigClient = function createConfigClient(route) {
           route
         }
       },
-      'sass-loader'
+      {
+        loader: 'sass-loader',
+        options: {
+          implementation: require('sass'),
+          api: 'modern'
+        }
+      }
     ]
   });
 
@@ -81,6 +88,7 @@ module.exports.createConfigClient = function createConfigClient(route) {
 
   config.entry = () => {
     const entry = {};
+
     entry[route.id] = [
       ...getComponentsByRoute(route),
       path.resolve(
@@ -89,7 +97,13 @@ module.exports.createConfigClient = function createConfigClient(route) {
       ),
       `webpack-hot-middleware/client?path=/eHot/${route.id}&reload=true&overlay=true`
     ];
-
+    // Widgets
+    const widgets = getEnabledWidgets();
+    if (!route.isAdmin) {
+      Object.keys(widgets).forEach((widget) => {
+        entry[route.id].push(widgets[widget].component);
+      });
+    }
     return entry;
   };
   config.watchOptions = {
@@ -97,5 +111,7 @@ module.exports.createConfigClient = function createConfigClient(route) {
     poll: 1000
   };
 
+  // Enable source maps
+  config.devtool = 'eval-cheap-module-source-map';
   return config;
 };

@@ -61,7 +61,7 @@ SkuSelector.propTypes = {
     buyQty: PropTypes.string,
     getQty: PropTypes.string,
     maxY: PropTypes.string,
-    discount: PropTypes.string
+    discount: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
   }).isRequired,
   updateProduct: PropTypes.func.isRequired
 };
@@ -101,7 +101,7 @@ export function BuyXGetY({ requireProducts, discountType }) {
         buy_qty: '',
         get_qty: '',
         max_y: '',
-        discount: 100
+        discount: '100'
       })
     );
   };
@@ -139,7 +139,7 @@ export function BuyXGetY({ requireProducts, discountType }) {
           </thead>
           <tbody>
             {products.map((p, i) => (
-              <tr key={p.sku}>
+              <tr key={`${p.sku}-${i}`}>
                 <td>
                   <SkuSelector
                     product={p}
@@ -226,7 +226,7 @@ export function BuyXGetY({ requireProducts, discountType }) {
             ))}
           </tbody>
         </table>
-        <div className="mt-1 flex justify-start">
+        <div className="mt-4 flex justify-start">
           <div className="items-center flex">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -244,7 +244,7 @@ export function BuyXGetY({ requireProducts, discountType }) {
               />
             </svg>
           </div>
-          <div className="pl-1">
+          <div className="pl-4">
             <a href="#" onClick={(e) => addProduct(e)}>
               <span>Add product</span>
             </a>

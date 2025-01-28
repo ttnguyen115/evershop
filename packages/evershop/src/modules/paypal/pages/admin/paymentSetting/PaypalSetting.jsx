@@ -10,13 +10,14 @@ export default function PaypalPayment({
     paypalDislayName,
     paypalClientId,
     paypalClientSecret,
-    paypalEnvironment
+    paypalEnvironment,
+    paypalPaymentIntent
   }
 }) {
   return (
     <Card title="Paypal Payment">
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Enable?</h4>
           </div>
@@ -26,7 +27,7 @@ export default function PaypalPayment({
         </div>
       </Card.Session>
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Dislay Name</h4>
           </div>
@@ -41,7 +42,7 @@ export default function PaypalPayment({
         </div>
       </Card.Session>
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Client ID</h4>
           </div>
@@ -49,14 +50,14 @@ export default function PaypalPayment({
             <Field
               type="text"
               name="paypalClientId"
-              placeholder="Publishable Key"
+              placeholder="Client ID"
               value={paypalClientId}
             />
           </div>
         </div>
       </Card.Session>
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Client Secret</h4>
           </div>
@@ -71,7 +72,7 @@ export default function PaypalPayment({
         </div>
       </Card.Session>
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Environment</h4>
           </div>
@@ -95,6 +96,25 @@ export default function PaypalPayment({
           </div>
         </div>
       </Card.Session>
+      <Card.Session>
+        <div className="grid grid-cols-3 gap-8">
+          <div className="col-span-1 items-center flex">
+            <h4>Payment mode</h4>
+          </div>
+          <div className="col-span-2">
+            <Field
+              type="radio"
+              name="paypalPaymentIntent"
+              placeholder="Payment Mode"
+              value={paypalPaymentIntent}
+              options={[
+                { text: 'Authorize only', value: 'AUTHORIZE' },
+                { text: 'Capture', value: 'CAPTURE' }
+              ]}
+            />
+          </div>
+        </div>
+      </Card.Session>
     </Card>
   );
 }
@@ -105,7 +125,8 @@ PaypalPayment.propTypes = {
     paypalDislayName: PropTypes.string,
     paypalClientId: PropTypes.string,
     paypalClientSecret: PropTypes.string,
-    paypalEnvironment: PropTypes.string
+    paypalEnvironment: PropTypes.string,
+    paypalPaymentIntent: PropTypes.string
   })
 };
 
@@ -115,7 +136,8 @@ PaypalPayment.defaultProps = {
     paypalDislayName: '',
     paypalClientId: '',
     paypalClientSecret: '',
-    paypalEnvironment: ''
+    paypalEnvironment: '',
+    paypalPaymentIntent: 'CAPTURE'
   }
 };
 
@@ -132,6 +154,7 @@ export const query = `
       paypalClientId
       paypalClientSecret
       paypalEnvironment
+      paypalPaymentIntent
     }
   }
 `;

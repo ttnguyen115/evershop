@@ -1,13 +1,13 @@
 /* eslint-disable react/no-danger */
-import { CKEditor } from '@components/common/CKEditor';
+import Editor from '@components/common/Editor';
 import PropTypes from 'prop-types';
 import React from 'react';
 
 export default function Description({ product: { description } }) {
   return (
-    <div className="mt-2 md:mt-3">
+    <div className="mt-8 md:mt-12">
       <div className="product-description">
-        <CKEditor content={description} />
+        <Editor rows={description} />
       </div>
     </div>
   );
@@ -15,7 +15,18 @@ export default function Description({ product: { description } }) {
 
 Description.propTypes = {
   product: PropTypes.shape({
-    description: PropTypes.string
+    description: PropTypes.arrayOf(
+      PropTypes.shape({
+        size: PropTypes.number.isRequired,
+        columns: PropTypes.arrayOf(
+          PropTypes.shape({
+            size: PropTypes.number.isRequired,
+            // eslint-disable-next-line react/forbid-prop-types
+            data: PropTypes.object
+          })
+        ).isRequired
+      })
+    ).isRequired
   }).isRequired
 };
 

@@ -14,7 +14,7 @@ export default function Items({ order: { items, shipmentStatus } }) {
   return (
     <Card
       title={
-        <div className="flex space-x-1">
+        <div className="flex space-x-4">
           <Circle variant={shipmentStatus.badge || 'new'} />
           <span className="block self-center">
             {shipmentStatus.name || 'Unknown'}
@@ -59,11 +59,11 @@ export default function Items({ order: { items, shipmentStatus } }) {
                     {
                       component: { default: 'td' },
                       props: {
-                        children: <span>{i.subTotal.text}</span>,
-                        key: 'subTotal'
+                        children: <span>{i.lineTotal.text}</span>,
+                        key: 'lineTotal'
                       },
                       sortOrder: 40,
-                      id: 'subTotal'
+                      id: 'lineTotal'
                     }
                   ]}
                 />
@@ -73,7 +73,7 @@ export default function Items({ order: { items, shipmentStatus } }) {
         </table>
       </Card.Session>
       <Card.Session>
-        <div className="flex justify-end gap-1">
+        <div className="flex justify-end gap-4">
           <Area id="order_actions" noOuter />
         </div>
       </Card.Session>
@@ -104,7 +104,7 @@ Items.propTypes = {
           value: PropTypes.number,
           text: PropTypes.string
         }),
-        subTotal: PropTypes.shape({
+        lineTotal: PropTypes.shape({
           value: PropTypes.number,
           text: PropTypes.string
         })
@@ -113,7 +113,7 @@ Items.propTypes = {
     shipmentStatus: PropTypes.shape({
       code: PropTypes.string,
       badge: PropTypes.string,
-      progress: PropTypes.number,
+      progress: PropTypes.string,
       name: PropTypes.string
     }),
     shipment: PropTypes.shape({
@@ -167,7 +167,7 @@ export const query = `
           value
           text
         }
-        subTotal {
+        lineTotal {
           value
           text
         }

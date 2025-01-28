@@ -2,14 +2,16 @@ const fs = require('fs');
 const { inspect } = require('util');
 const JSON5 = require('json5');
 const { CONSTANTS } = require('../../helpers');
-const { error } = require('../../log/debuger');
+const { error } = require('../../log/logger');
+const { getEnabledWidgets } = require('../../util/getEnabledWidgets');
+const { generateComponentKey } = require('../util/keyGenerator');
 
 /* eslint-disable no-multi-assign */
 /* eslint-disable global-require */
 module.exports = exports = function AreaLoader(c) {
   this.cacheable(false);
   const components = this.getOptions().getComponents();
-  const { routeId } = this.getOptions();
+  const { route } = this.getOptions();
   const areas = {};
   components.forEach((module) => {
     this.addDependency(module);
@@ -28,9 +30,7 @@ module.exports = exports = function AreaLoader(c) {
         .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2": ');
       try {
         const layout = JSON5.parse(check);
-        const id = Buffer.from(module.replace(CONSTANTS.ROOTPATH, '')).toString(
-          'base64'
-        );
+        const id = generateComponentKey(module.replace(CONSTANTS.ROOTPATH, ''));
         areas[layout.areaId] = areas[layout.areaId] || {};
         areas[layout.areaId][id] = {
           id,
@@ -43,11 +43,21 @@ module.exports = exports = function AreaLoader(c) {
       }
     }
   });
-
+  const widgets = getEnabledWidgets();
+  areas['*'] = areas['*'] || {};
+  widgets.forEach((widget) => {
+    areas['*'][widget.type] = {
+      id: widget.type,
+      sortOrder: widget.sortOrder || 0,
+      component: route.isAdmin
+        ? `---require('${widget.setting_component}')---`
+        : `---require('${widget.component}')---`
+    };
+  });
   const content = `Area.defaultProps.components = ${inspect(areas, { depth: 5 })
     .replace(/"---/g, '')
     .replace(/---"/g, '')} `;
   return c
     .replace('/** render */', content)
-    .replace('/eHot', `/eHot/${routeId}`);
+    .replace('/eHot', `/eHot/${route.id}`);
 };

@@ -5,24 +5,21 @@ import Area from '@components/common/Area';
 import { OrderSummary } from '@components/frontStore/checkout/success/summary/order/OrderSummary';
 import './Summary.scss';
 
-export default function Summary({
-  order,
-  setting: { displayCheckoutPriceIncludeTax }
-}) {
+export default function Summary({ order, setting: { priceIncludingTax } }) {
   return (
     <Area
       id="checkoutSuccessSummary"
-      className="checkout-summary hidden md:block"
+      className="checkout-summary h-full hidden md:block"
       coreComponents={[
         {
           component: { default: Items },
-          props: { items: order.items, displayCheckoutPriceIncludeTax },
+          props: { items: order.items, priceIncludingTax },
           sortOrder: 20,
           id: 'checkoutSuccessOrderSummaryItems'
         },
         {
           component: { default: OrderSummary },
-          props: { ...order, displayCheckoutPriceIncludeTax },
+          props: { ...order, priceIncludingTax },
           sortOrder: 30,
           id: 'checkoutSuccessOrderSummary'
         }
@@ -35,18 +32,14 @@ Summary.propTypes = {
   order: PropTypes.shape({
     items: PropTypes.arrayOf(
       PropTypes.shape({
-        id: PropTypes.string.isRequired,
-        name: PropTypes.string.isRequired,
-        quantity: PropTypes.number.isRequired,
-        price: PropTypes.shape({
+        productName: PropTypes.string.isRequired,
+        qty: PropTypes.number.isRequired,
+        thumbnail: PropTypes.string,
+        variantOptions: PropTypes.string,
+        lineTotalInclTax: PropTypes.shape({
           text: PropTypes.string.isRequired
         }).isRequired,
-        thumbnail: PropTypes.string.isRequired,
-        variantOptions: PropTypes.string.isRequired,
-        total: PropTypes.shape({
-          text: PropTypes.string.isRequired
-        }).isRequired,
-        subTotal: PropTypes.shape({
+        lineTotal: PropTypes.shape({
           text: PropTypes.string.isRequired
         }).isRequired
       })
@@ -67,13 +60,13 @@ Summary.propTypes = {
     subTotalInclTax: PropTypes.shape({
       text: PropTypes.string
     }),
-    taxAmount: PropTypes.shape({
+    totalTaxAmount: PropTypes.shape({
       text: PropTypes.string
     }),
     coupon: PropTypes.string
   }).isRequired,
   setting: PropTypes.shape({
-    displayCheckoutPriceIncludeTax: PropTypes.bool
+    priceIncludingTax: PropTypes.bool
   }).isRequired
 };
 
@@ -96,7 +89,7 @@ export const query = `
         value
         text
       }
-      taxAmount {
+      totalTaxAmount {
         value
         text
       }
@@ -118,18 +111,18 @@ export const query = `
         productSku
         qty
         variantOptions
-        total {
+        lineTotalInclTax {
           value
           text
         }
-        subTotal {
+        lineTotal {
           value
           text
         }
       }
     }
     setting {
-      displayCheckoutPriceIncludeTax
+      priceIncludingTax
     }
   }
 `;

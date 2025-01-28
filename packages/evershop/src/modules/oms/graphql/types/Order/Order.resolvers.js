@@ -2,11 +2,12 @@ const { select } = require('@evershop/postgres-query-builder');
 const { camelCase } = require('@evershop/evershop/src/lib/util/camelCase');
 const { getConfig } = require('@evershop/evershop/src/lib/util/getConfig');
 const { buildUrl } = require('@evershop/evershop/src/lib/router/buildUrl');
+const { getOrdersBaseQuery } = require('../../../services/getOrdersBaseQuery');
 
 module.exports = {
   Query: {
     order: async (_, { uuid }, { pool }) => {
-      const query = select().from('order');
+      const query = getOrdersBaseQuery();
       query.where('uuid', '=', uuid);
       const order = await query.load(pool);
       if (!order) {
@@ -83,6 +84,20 @@ module.exports = {
         ...status,
         code: paymentStatus
       };
+    },
+    status: ({ status }) => {
+      const statusList = getConfig('oms.order.status', {});
+      const statusObj = statusList[status] || {
+        name: 'Unknown',
+        code: status,
+        badge: 'default',
+        progress: 'incomplete'
+      };
+
+      return {
+        ...statusObj,
+        code: status
+      };
     }
   },
   Customer: {
@@ -101,6 +116,12 @@ module.exports = {
         .where('product_id', '=', productId)
         .load(pool);
       return product ? buildUrl('productEdit', { id: product.uuid }) : null;
-    }
+    },
+    total: ({ lineTotalInclTax }) =>
+      // This field is deprecated, use lineTotalInclTax instead
+      lineTotalInclTax,
+    subTotal: ({ lineTotal }) =>
+      // This field is deprecated, use lineTotal instead
+      lineTotal
   }
 };

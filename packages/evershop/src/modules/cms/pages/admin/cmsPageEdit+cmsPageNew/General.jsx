@@ -4,7 +4,7 @@ import Area from '@components/common/Area';
 import { get } from '@evershop/evershop/src/lib/util/get';
 import { Field } from '@components/common/form/Field';
 import { Card } from '@components/admin/cms/Card';
-import CkeditorField from '@components/common/form/fields/Ckeditor';
+import Editor from '@components/common/form/fields/Editor';
 
 export default function General({
   page,
@@ -36,7 +36,7 @@ export default function General({
       sortOrder: 10
     },
     {
-      component: { default: CkeditorField },
+      component: { default: Editor },
       props: {
         id: 'content',
         name: 'content',
@@ -69,7 +69,20 @@ General.propTypes = {
   page: PropTypes.shape({
     cmsPageId: PropTypes.number,
     name: PropTypes.string,
-    content: PropTypes.string
+    content: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        size: PropTypes.number.isRequired,
+        columns: PropTypes.arrayOf(
+          PropTypes.shape({
+            id: PropTypes.string.isRequired,
+            size: PropTypes.number.isRequired,
+            // eslint-disable-next-line react/forbid-prop-types
+            data: PropTypes.object.isRequired
+          })
+        )
+      })
+    )
   }),
   browserApi: PropTypes.string.isRequired,
   deleteApi: PropTypes.string.isRequired,
@@ -86,7 +99,7 @@ General.defaultProps = {
 };
 
 export const layout = {
-  areaId: 'leftSide',
+  areaId: 'wideScreen',
   sortOrder: 10
 };
 

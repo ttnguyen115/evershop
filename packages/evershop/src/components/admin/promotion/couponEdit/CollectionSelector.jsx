@@ -30,13 +30,13 @@ function CollectionSelector({ onSelect, onUnSelect, selectedIDs, closeModal }) {
     variables: {
       filters: inputValue
         ? [
-            { key: 'name', operation: '=', value: inputValue },
-            { key: 'page', operation: '=', value: page.toString() },
-            { key: 'limit', operation: '=', value: limit.toString() }
+            { key: 'name', operation: 'eq', value: inputValue },
+            { key: 'page', operation: 'eq', value: page.toString() },
+            { key: 'limit', operation: 'eq', value: limit.toString() }
           ]
         : [
-            { key: 'limit', operation: '=', value: limit.toString() },
-            { key: 'page', operation: '=', value: page.toString() }
+            { key: 'limit', operation: 'eq', value: limit.toString() },
+            { key: 'page', operation: 'eq', value: page.toString() }
           ]
     },
     pause: true
@@ -76,10 +76,10 @@ function CollectionSelector({ onSelect, onUnSelect, selectedIDs, closeModal }) {
       <div className="modal-content">
         <Card.Session>
           <div>
-            <div className="border rounded border-divider mb-2">
+            <div className="border rounded border-divider mb-8">
               <input
                 type="text"
-                value={inputValue}
+                value={inputValue || ''}
                 placeholder="Search collections"
                 onChange={(e) => setInputValue(e.target.value)}
               />
@@ -105,7 +105,7 @@ function CollectionSelector({ onSelect, onUnSelect, selectedIDs, closeModal }) {
                 {data.collections.items.map((collection) => (
                   <div
                     key={collection.uuid}
-                    className="grid grid-cols-8 gap-2 py-1 border-divider items-center"
+                    className="grid grid-cols-8 gap-8 py-4 border-divider items-center"
                   >
                     <div className="col-span-5">
                       <h3>{collection.name}</h3>
@@ -144,9 +144,9 @@ function CollectionSelector({ onSelect, onUnSelect, selectedIDs, closeModal }) {
         </Card.Session>
       </div>
       <Card.Session>
-        <div className="flex justify-between gap-2">
+        <div className="flex justify-between gap-8">
           <SimplePageination
-            total={data?.collections.total}
+            total={data?.collections.total || 0}
             count={data?.collections?.items?.length || 0}
             page={page}
             hasNext={limit * page < data?.collections.total}
@@ -162,7 +162,7 @@ function CollectionSelector({ onSelect, onUnSelect, selectedIDs, closeModal }) {
 CollectionSelector.propTypes = {
   onSelect: PropTypes.func.isRequired,
   onUnSelect: PropTypes.func.isRequired,
-  selectedIDs: PropTypes.arrayOf(PropTypes.string),
+  selectedIDs: PropTypes.arrayOf(PropTypes.number),
   closeModal: PropTypes.func.isRequired
 };
 

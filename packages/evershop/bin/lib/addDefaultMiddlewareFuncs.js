@@ -4,7 +4,7 @@ const session = require('express-session');
 const sessionStorage = require('connect-pg-simple');
 const pathToRegexp = require('path-to-regexp');
 const webpack = require('webpack');
-const { debug } = require('@evershop/evershop/src/lib/log/debuger');
+const { debug } = require('@evershop/evershop/src/lib/log/logger');
 const middleware = require('webpack-dev-middleware');
 const {
   createConfigClient
@@ -59,7 +59,7 @@ exports.addDefaultMiddlewareFuncs = function addDefaultMiddlewareFuncs(
       ) {
         return;
       }
-      debug('info', message);
+      debug(message);
     });
   });
   // Add public static middleware
@@ -78,10 +78,10 @@ exports.addDefaultMiddlewareFuncs = function addDefaultMiddlewareFuncs(
           }),
     secret: cookieSecret,
     cookie: {
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: getConfig('system.session.maxAge', 24 * 60 * 60 * 1000)
     },
     resave: getConfig('system.session.resave', false),
-    saveUninitialized: true
+    saveUninitialized: getConfig('system.session.saveUninitialized', true)
   };
 
   if (isProductionMode()) {
@@ -261,6 +261,11 @@ exports.addDefaultMiddlewareFuncs = function addDefaultMiddlewareFuncs(
         } else {
           middlewareFunc = route.webpackMiddleware;
         }
+        middlewareFunc.waitUntilValid(() => {
+          const { stats } = middlewareFunc.context;
+          const jsonWebpackStats = stats.toJson();
+          response.locals.jsonWebpackStats = jsonWebpackStats;
+        });
         // We need to run build for notFound route
         const notFoundRoute = routes.find((r) => r.id === 'notFound');
         const notFoundWebpackCompiler = notFoundRoute.webpackCompiler;

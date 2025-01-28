@@ -46,13 +46,13 @@ export default function Products({ category: { categoryId, addProductApi } }) {
       id: parseInt(categoryId, 10),
       filters: !keyword
         ? [
-            { key: 'page', operation: '=', value: page.toString() },
-            { key: 'limit', operation: '=', value: '10' }
+            { key: 'page', operation: 'eq', value: page.toString() },
+            { key: 'limit', operation: 'eq', value: '10' }
           ]
         : [
-            { key: 'page', operation: '=', value: page.toString() },
-            { key: 'limit', operation: '=', value: '10' },
-            { key: 'keyword', operation: '=', value: keyword }
+            { key: 'page', operation: 'eq', value: page.toString() },
+            { key: 'limit', operation: 'eq', value: '10' },
+            { key: 'keyword', operation: 'eq', value: keyword }
           ]
     },
     pause: true
@@ -142,7 +142,7 @@ export default function Products({ category: { categoryId, addProductApi } }) {
         )}
         <Card.Session>
           <div>
-            <div className="border rounded border-divider mb-2">
+            <div className="border rounded border-divider mb-8">
               <input
                 type="text"
                 value={keyword}
@@ -161,7 +161,7 @@ export default function Products({ category: { categoryId, addProductApi } }) {
                   </div>
                   <div>
                     {data.category.products.total > 10 && (
-                      <div className="flex justify-between gap-1">
+                      <div className="flex justify-between gap-4">
                         {page > 1 && (
                           <a
                             className="text-interactive"
@@ -195,9 +195,9 @@ export default function Products({ category: { categoryId, addProductApi } }) {
                     // eslint-disable-next-line react/no-array-index-key
                     <div
                       key={p.uuid}
-                      className="grid grid-cols-8 gap-2 py-1 border-divider items-center"
+                      className="grid grid-cols-8 gap-8 py-4 border-divider items-center"
                     >
-                      <div className="grid-thumbnail text-border border border-divider p-075 rounded flex justify-center col-span-1">
+                      <div className="grid-thumbnail text-border border border-divider p-3 rounded flex justify-center col-span-1">
                         {p.image?.url && (
                           <img
                             className="self-center"
@@ -267,7 +267,7 @@ export default function Products({ category: { categoryId, addProductApi } }) {
 
 Products.propTypes = {
   category: PropTypes.shape({
-    categoryId: PropTypes.string,
+    categoryId: PropTypes.number,
     addProductApi: PropTypes.string
   }).isRequired
 };

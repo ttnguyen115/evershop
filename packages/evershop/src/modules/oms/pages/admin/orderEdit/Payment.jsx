@@ -9,7 +9,6 @@ import { Shipping } from '@components/admin/oms/orderEdit/payment/Shipping';
 import { SubTotal } from '@components/admin/oms/orderEdit/payment/SubTotal';
 import { Tax } from '@components/admin/oms/orderEdit/payment/Tax';
 import { Total } from '@components/admin/oms/orderEdit/payment/Total';
-import { Transactions } from '@components/admin/oms/orderEdit/payment/Transactions';
 
 export default function OrderSummary({
   order: {
@@ -18,23 +17,24 @@ export default function OrderSummary({
     shippingMethodName,
     paymentMethodName,
     totalQty,
-    taxAmount,
+    totalTaxAmount,
     discountAmount,
     grandTotal,
     subTotal,
     shippingFeeInclTax,
     currency,
-    paymentStatus,
-    transactions
+    paymentStatus
   }
 }) {
   return (
     <Card
       title={
-        <div className="flex space-x-1">
+        <div className="flex space-x-4">
           <Circle variant={paymentStatus.badge} />
           <span className="block self-center">
-            {paymentMethodName || 'Unknown'}
+            {`${paymentStatus.name || 'Unknown'} - ${
+              paymentMethodName || 'Unknown'
+            }`}
           </span>
         </div>
       }
@@ -47,7 +47,7 @@ export default function OrderSummary({
           grandTotal={grandTotal}
           coupon={coupon}
           discountAmount={discountAmount}
-          taxAmount={taxAmount}
+          totalTaxAmount={totalTaxAmount}
           className="summary-wrapper"
           coreComponents={[
             {
@@ -70,7 +70,7 @@ export default function OrderSummary({
             },
             {
               component: { default: Tax },
-              props: { taxClass: '', amount: taxAmount.text },
+              props: { taxClass: '', amount: totalTaxAmount.text },
               sortOrder: 20
             },
 
@@ -82,10 +82,7 @@ export default function OrderSummary({
           ]}
         />
       </Card.Session>
-      <Card.Session>
-        <Transactions transactions={transactions} />
-      </Card.Session>
-      <Area id="orderPaymentActions" noOuter />
+      <Area id="orderPaymentActions" />
     </Card>
   );
 }
@@ -97,7 +94,7 @@ OrderSummary.propTypes = {
     coupon: PropTypes.string,
     shippingMethod: PropTypes.string,
     paymentMethodName: PropTypes.string,
-    taxAmount: PropTypes.shape({
+    totalTaxAmount: PropTypes.shape({
       text: PropTypes.string.isRequired
     }).isRequired,
     discountAmount: PropTypes.shape({
@@ -117,20 +114,9 @@ OrderSummary.propTypes = {
     paymentStatus: PropTypes.shape({
       code: PropTypes.string,
       badge: PropTypes.string,
-      progress: PropTypes.number,
+      progress: PropTypes.string,
       name: PropTypes.string
-    }).isRequired,
-    transactions: PropTypes.arrayOf(
-      PropTypes.shape({
-        paymentTransactionId: PropTypes.string.isRequired,
-        amount: PropTypes.shape({
-          text: PropTypes.string.isRequired,
-          value: PropTypes.number.isRequired
-        }).isRequired,
-        paymentAction: PropTypes.string.isRequired,
-        transactionType: PropTypes.string.isRequired
-      })
-    ).isRequired
+    }).isRequired
   }).isRequired
 };
 
@@ -148,7 +134,7 @@ export const query = `
       shippingMethodName
       paymentMethod
       paymentMethodName
-      taxAmount {
+      totalTaxAmount {
         text(currency: getContextValue("orderCurrency"))
       }
       discountAmount {
@@ -169,15 +155,6 @@ export const query = `
         badge
         progress
         name
-      }
-      transactions: paymentTransactions {
-        paymentTransactionId
-        amount {
-          text(currency: getContextValue("orderCurrency"))
-          value
-        }
-        paymentAction
-        transactionType
       }
     }
   }

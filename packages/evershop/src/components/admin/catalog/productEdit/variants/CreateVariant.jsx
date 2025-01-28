@@ -20,7 +20,7 @@ export function CreateVariant({
 
   return (
     <div>
-      <div className="mt-2">
+      <div className="mt-8">
         <Button
           title="Add Variant"
           onAction={() => {
@@ -46,7 +46,7 @@ export function CreateVariant({
                   </Card.Session>
                   <Card.Session>
                     <div className="flex justify-end">
-                      <div className="grid grid-cols-2 gap-1">
+                      <div className="grid grid-cols-2 gap-4">
                         <SubmitButton
                           productId={productId}
                           attributes={variantGroup.attributes}
@@ -82,8 +82,8 @@ CreateVariant.propTypes = {
     attributes: PropTypes.arrayOf(
       PropTypes.shape({
         attributeName: PropTypes.string,
-        attributeId: PropTypes.string.isRequired,
-        attributeType: PropTypes.string.isRequired,
+        attributeId: PropTypes.number.isRequired,
+        attributeCode: PropTypes.string.isRequired,
         attributeValues: PropTypes.arrayOf(
           PropTypes.shape({
             attributeValueId: PropTypes.string.isRequired,
@@ -93,8 +93,8 @@ CreateVariant.propTypes = {
       })
     )
   }).isRequired,
-  createProductApi: PropTypes.func.isRequired,
-  addVariantItemApi: PropTypes.func.isRequired,
+  createProductApi: PropTypes.string.isRequired,
+  addVariantItemApi: PropTypes.string.isRequired,
   productImageUploadUrl: PropTypes.string.isRequired,
   refresh: PropTypes.func.isRequired
 };

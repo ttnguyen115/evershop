@@ -12,27 +12,25 @@ function CartSummary({
   subTotalInclTax,
   grandTotal,
   discountAmount,
-  taxAmount,
+  totalTaxAmount,
   shippingMethodName,
   shippingFeeInclTax,
   coupon,
-  displayCheckoutPriceIncludeTax
+  priceIncludingTax
 }) {
   return (
     <div className="checkout-summary-block">
       <Subtotal
         count={totalQty}
-        total={
-          displayCheckoutPriceIncludeTax ? subTotalInclTax.text : subTotal.text
-        }
+        total={priceIncludingTax ? subTotalInclTax.text : subTotal.text}
       />
       <Shipping method={shippingMethodName} cost={shippingFeeInclTax.text} />
-      {!displayCheckoutPriceIncludeTax && <Tax amount={taxAmount.text} />}
+      {!priceIncludingTax && <Tax amount={totalTaxAmount.text} />}
       <Discount code={coupon} discount={discountAmount.text} />
       <Total
-        taxAmount={taxAmount.text}
+        totalTaxAmount={totalTaxAmount.text}
         total={grandTotal.text}
-        displayCheckoutPriceIncludeTax={displayCheckoutPriceIncludeTax}
+        priceIncludingTax={priceIncludingTax}
       />
     </div>
   );
@@ -56,11 +54,11 @@ CartSummary.propTypes = {
   subTotalInclTax: PropTypes.shape({
     text: PropTypes.string.isRequired
   }),
-  taxAmount: PropTypes.shape({
+  totalTaxAmount: PropTypes.shape({
     text: PropTypes.string.isRequired
   }),
-  totalQty: PropTypes.string,
-  displayCheckoutPriceIncludeTax: PropTypes.bool
+  totalQty: PropTypes.number,
+  priceIncludingTax: PropTypes.bool
 };
 
 CartSummary.defaultProps = {
@@ -81,11 +79,11 @@ CartSummary.defaultProps = {
   subTotalInclTax: {
     text: ''
   },
-  taxAmount: {
+  totalTaxAmount: {
     text: ''
   },
   totalQty: '',
-  displayCheckoutPriceIncludeTax: false
+  priceIncludingTax: false
 };
 
 export { CartSummary };

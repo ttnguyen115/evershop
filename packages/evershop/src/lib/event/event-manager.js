@@ -7,7 +7,7 @@ const { getCoreModules } = require('@evershop/evershop/bin/lib/loadModules');
 const { getEnabledExtensions } = require('@evershop/evershop/bin/extension');
 const { callSubscribers } = require('./callSubscibers');
 const { loadSubscribers } = require('./loadSubscribers');
-const { error } = require('../log/debuger');
+const { error } = require('../log/logger');
 const { lockHooks } = require('../util/hookable');
 const { lockRegistry } = require('../util/registry');
 
@@ -70,7 +70,7 @@ async function loadEvents(count) {
   }
 
   if (events.length > 0) {
-    query.and(
+    query.andWhere(
       'uuid',
       'NOT IN',
       events.map((event) => event.uuid)

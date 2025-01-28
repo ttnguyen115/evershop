@@ -5,24 +5,21 @@ import { CartSummary } from '@components/frontStore/checkout/checkout/summary/Ca
 import Area from '@components/common/Area';
 import './Summary.scss';
 
-export default function Summary({
-  cart,
-  setting: { displayCheckoutPriceIncludeTax }
-}) {
+export default function Summary({ cart, setting: { priceIncludingTax } }) {
   return (
     <Area
       id="checkoutSummary"
-      className="checkout-summary hidden md:block"
+      className="checkout-summary h-full hidden md:block"
       coreComponents={[
         {
           component: { default: Items },
-          props: { items: cart.items, displayCheckoutPriceIncludeTax },
+          props: { items: cart.items, priceIncludingTax },
           sortOrder: 20,
           id: 'checkoutOrderSummaryItems'
         },
         {
           component: { default: CartSummary },
-          props: { ...cart, displayCheckoutPriceIncludeTax },
+          props: { ...cart, priceIncludingTax },
           sortOrder: 30,
           id: 'checkoutOrderSummaryCart'
         }
@@ -42,7 +39,10 @@ Summary.propTypes = {
         total: PropTypes.shape({
           text: PropTypes.string
         }),
-        subTotal: PropTypes.shape({
+        lineTotal: PropTypes.shape({
+          text: PropTypes.string
+        }),
+        lineTotalInclTax: PropTypes.shape({
           text: PropTypes.string
         })
       })
@@ -60,7 +60,7 @@ Summary.propTypes = {
     discountAmount: PropTypes.shape({
       text: PropTypes.string
     }),
-    taxAmount: PropTypes.shape({
+    totalTaxAmount: PropTypes.shape({
       text: PropTypes.string
     }),
     shippingFeeInclTax: PropTypes.shape({
@@ -70,7 +70,7 @@ Summary.propTypes = {
     coupon: PropTypes.string
   }).isRequired,
   setting: PropTypes.shape({
-    displayCheckoutPriceIncludeTax: PropTypes.bool
+    priceIncludingTax: PropTypes.bool
   }).isRequired
 };
 
@@ -99,7 +99,7 @@ export const query = `
         value
         text
       }
-      taxAmount {
+      totalTaxAmount {
         value
         text
       }
@@ -115,18 +115,18 @@ export const query = `
         productSku
         qty
         variantOptions
-        total {
+        lineTotalInclTax {
           value
           text
         }
-        subTotal {
+        lineTotal {
           value
           text
         }
       }
     }
     setting {
-      displayCheckoutPriceIncludeTax
+      priceIncludingTax
     }
   }
 `;

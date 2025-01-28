@@ -8,11 +8,11 @@ function Rate({ rate, getTaxClasses }) {
   return (
     <>
       <>
-        <td className="border-none py-1">{rate.name}</td>
-        <td className="border-none py-1">{rate.rate}%</td>
-        <td className="border-none py-1">{rate.isCompound ? 'Yes' : 'No'}</td>
-        <td className="border-none py-1">{rate.priority}</td>
-        <td className="border-none py-1">
+        <td className="border-none py-4">{rate.name}</td>
+        <td className="border-none py-4">{rate.rate}%</td>
+        <td className="border-none py-4">{rate.isCompound ? 'Yes' : 'No'}</td>
+        <td className="border-none py-4">{rate.priority}</td>
+        <td className="border-none py-4">
           <a
             href="#"
             className="text-interactive"
@@ -25,7 +25,7 @@ function Rate({ rate, getTaxClasses }) {
           </a>
           <a
             href="#"
-            className="text-critical ml-2"
+            className="text-critical ml-8"
             onClick={async (e) => {
               e.preventDefault();
               await fetch(rate.deleteApi, {
@@ -39,22 +39,27 @@ function Rate({ rate, getTaxClasses }) {
         </td>
       </>
       {modal.state.showing && (
-        <div className={modal.className} onAnimationEnd={modal.onAnimationEnd}>
+        <td className="border-none w-0 h-0">
           <div
-            className="modal-wrapper flex self-center justify-center items-center"
-            tabIndex={-1}
-            role="dialog"
+            className={modal.className}
+            onAnimationEnd={modal.onAnimationEnd}
           >
-            <div className="modal">
-              <RateForm
-                saveRateApi={rate.updateApi}
-                closeModal={() => modal.closeModal()}
-                getTaxClasses={getTaxClasses}
-                rate={rate}
-              />
+            <div
+              className="modal-wrapper flex self-center justify-center items-center"
+              tabIndex={-1}
+              role="dialog"
+            >
+              <div className="modal">
+                <RateForm
+                  saveRateApi={rate.updateApi}
+                  closeModal={() => modal.closeModal()}
+                  getTaxClasses={getTaxClasses}
+                  rate={rate}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </td>
       )}
     </>
   );

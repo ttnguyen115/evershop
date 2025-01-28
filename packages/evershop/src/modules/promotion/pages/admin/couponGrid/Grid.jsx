@@ -1,3 +1,4 @@
+/* eslint-disable no-nested-ternary */
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import axios from 'axios';
@@ -5,14 +6,16 @@ import Area from '@components/common/Area';
 import Pagination from '@components/common/grid/Pagination';
 import { Checkbox } from '@components/common/form/fields/Checkbox';
 import { useAlertContext } from '@components/common/modal/Alert';
-import BasicColumnHeader from '@components/common/grid/headers/Basic';
-import FromToColumnHeader from '@components/common/grid/headers/FromTo';
-import StatusColumnHeader from '@components/common/grid/headers/Status';
 import CouponName from '@components/admin/promotion/couponGrid/rows/CouponName';
 import BasicRow from '@components/common/grid/rows/BasicRow';
 import StatusRow from '@components/common/grid/rows/StatusRow';
 import { Card } from '@components/admin/cms/Card';
 import TextRow from '@components/common/grid/rows/TextRow';
+import { Form } from '@components/common/form/Form';
+import { Field } from '@components/common/form/Field';
+import SortableHeader from '@components/common/grid/headers/Sortable';
+import DummyColumnHeader from '@components/common/grid/headers/Dummy';
+import Filter from '@components/common/list/Filter';
 
 function Actions({ coupons = [], selectedIds = [] }) {
   const { openAlert, closeAlert } = useAlertContext();
@@ -120,17 +123,18 @@ function Actions({ coupons = [], selectedIds = [] }) {
       {selectedIds.length > 0 && (
         <td style={{ borderTop: 0 }} colSpan="100">
           <div className="inline-flex border border-divider rounded justify-items-start">
-            <a href="#" className="font-semibold pt-075 pb-075 pl-15 pr-15">
+            <a href="#" className="font-semibold pt-3 pb-3 pl-6 pr-6">
               {selectedIds.length} selected
             </a>
-            {actions.map((action) => (
+            {actions.map((action, i) => (
               <a
+                key={i}
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
                   action.onAction();
                 }}
-                className="font-semibold pt-075 pb-075 pl-15 pr-15 block border-l border-divider self-center"
+                className="font-semibold pt-3 pb-3 pl-6 pr-6 block border-l border-divider self-center"
               >
                 <span>{action.name}</span>
               </a>
@@ -158,15 +162,160 @@ export default function CouponGrid({
   coupons: { items: coupons, total, currentFilters = [] }
 }) {
   const page = currentFilters.find((filter) => filter.key === 'page')
-    ? currentFilters.find((filter) => filter.key === 'page').value
+    ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
     : 1;
   const limit = currentFilters.find((filter) => filter.key === 'limit')
-    ? currentFilters.find((filter) => filter.key === 'limit').value
+    ? parseInt(
+        currentFilters.find((filter) => filter.key === 'limit').value,
+        10
+      )
     : 20;
   const [selectedRows, setSelectedRows] = useState([]);
 
   return (
     <Card>
+      <Card.Session
+        title={
+          <Form submitBtn={false} id="couponGridFilter">
+            <div className="flex gap-8 justify-center items-center">
+              <Area
+                id="couponGridFilter"
+                noOuter
+                coreComponents={[
+                  {
+                    component: {
+                      default: () => (
+                        <Field
+                          type="text"
+                          id="coupon"
+                          name="coupon"
+                          placeholder="Search"
+                          value={
+                            currentFilters.find((f) => f.key === 'coupon')
+                              ?.value
+                          }
+                          onKeyPress={(e) => {
+                            // If the user press enter, we should submit the form
+                            if (e.key === 'Enter') {
+                              const url = new URL(document.location);
+                              const coupon =
+                                document.getElementById('coupon')?.value;
+                              if (coupon) {
+                                url.searchParams.set(
+                                  'coupon[operation]',
+                                  'like'
+                                );
+                                url.searchParams.set('coupon[value]', coupon);
+                              } else {
+                                url.searchParams.delete('coupon[operation]');
+                                url.searchParams.delete('coupon[value]');
+                              }
+                              window.location.href = url;
+                            }
+                          }}
+                        />
+                      )
+                    },
+                    sortOrder: 5
+                  },
+                  {
+                    component: {
+                      default: () => (
+                        <Filter
+                          options={[
+                            {
+                              label: 'Enabled',
+                              value: '1',
+                              onSelect: () => {
+                                const url = new URL(document.location);
+                                url.searchParams.set('status', 1);
+                                window.location.href = url;
+                              }
+                            },
+                            {
+                              label: 'Disabled',
+                              value: '0',
+                              onSelect: () => {
+                                const url = new URL(document.location);
+                                url.searchParams.set('status', 0);
+                                window.location.href = url;
+                              }
+                            }
+                          ]}
+                          selectedOption={
+                            currentFilters.find((f) => f.key === 'status')
+                              ? currentFilters.find((f) => f.key === 'status')
+                                  .value === '1'
+                                ? 'Enabled'
+                                : 'Disabled'
+                              : undefined
+                          }
+                          title="Status"
+                        />
+                      )
+                    },
+                    sortOrder: 10
+                  },
+                  {
+                    component: {
+                      default: () => (
+                        <Filter
+                          options={[
+                            {
+                              label: 'Free shipping',
+                              value: '1',
+                              onSelect: () => {
+                                const url = new URL(document.location);
+                                url.searchParams.set('free_shipping', 1);
+                                window.location.href = url;
+                              }
+                            },
+                            {
+                              label: 'No free shipping',
+                              value: '0',
+                              onSelect: () => {
+                                const url = new URL(document.location);
+                                url.searchParams.set('free_shipping', 0);
+                                window.location.href = url;
+                              }
+                            }
+                          ]}
+                          selectedOption={
+                            currentFilters.find(
+                              (f) => f.key === 'free_shipping'
+                            )
+                              ? currentFilters.find(
+                                  (f) => f.key === 'free_shipping'
+                                ).value === '1'
+                                ? 'Free shipping'
+                                : 'No free shipping'
+                              : undefined
+                          }
+                          title="Free shipping?"
+                        />
+                      )
+                    },
+                    sortOrder: 10
+                  }
+                ]}
+                currentFilters={currentFilters}
+              />
+            </div>
+          </Form>
+        }
+        actions={[
+          {
+            variant: 'interactive',
+            name: 'Clear filter',
+            onAction: () => {
+              // Just get the url and remove all query params
+              const url = new URL(document.location);
+              url.search = '';
+              window.location.href = url.href;
+            }
+          }
+        ]}
+      />
       <table className="listing sticky">
         <thead>
           <tr>
@@ -187,9 +336,9 @@ export default function CouponGrid({
                   // eslint-disable-next-line react/no-unstable-nested-components
                   component: {
                     default: () => (
-                      <BasicColumnHeader
+                      <SortableHeader
                         title="Coupon Code"
-                        id="coupon"
+                        name="coupon"
                         currentFilters={currentFilters}
                       />
                     )
@@ -199,30 +348,14 @@ export default function CouponGrid({
                 {
                   // eslint-disable-next-line react/no-unstable-nested-components
                   component: {
-                    default: () => (
-                      <FromToColumnHeader
-                        title="State Date"
-                        id="startDate"
-                        currentFilter={currentFilters.find(
-                          (f) => f.key === 'startDate'
-                        )}
-                      />
-                    )
+                    default: () => <DummyColumnHeader title="State Date" />
                   },
                   sortOrder: 20
                 },
                 {
                   // eslint-disable-next-line react/no-unstable-nested-components
                   component: {
-                    default: () => (
-                      <FromToColumnHeader
-                        title="End Date"
-                        id="endDate"
-                        currentFilter={currentFilters.find(
-                          (f) => f.key === 'endDate'
-                        )}
-                      />
-                    )
+                    default: () => <DummyColumnHeader title="End Date" />
                   },
                   sortOrder: 30
                 },
@@ -230,12 +363,10 @@ export default function CouponGrid({
                   // eslint-disable-next-line react/no-unstable-nested-components
                   component: {
                     default: () => (
-                      <StatusColumnHeader
+                      <SortableHeader
                         title="Status"
-                        id="status"
-                        currentFilter={currentFilters.find(
-                          (f) => f.key === 'status'
-                        )}
+                        name="status"
+                        currentFilters={currentFilters}
                       />
                     )
                   },
@@ -245,12 +376,10 @@ export default function CouponGrid({
                   // eslint-disable-next-line react/no-unstable-nested-components
                   component: {
                     default: () => (
-                      <FromToColumnHeader
+                      <SortableHeader
                         title="Used Times"
-                        id="usedTime"
-                        currentFilter={currentFilters.find(
-                          (f) => f.key === 'usedTime'
-                        )}
+                        name="used_time"
+                        currentFilters={currentFilters}
                       />
                     )
                   },
@@ -359,14 +488,14 @@ CouponGrid.propTypes = {
         couponId: PropTypes.number.isRequired,
         uuid: PropTypes.string.isRequired,
         coupon: PropTypes.string.isRequired,
-        status: PropTypes.string.isRequired,
+        status: PropTypes.number.isRequired,
         usedTime: PropTypes.number.isRequired,
         startDate: PropTypes.shape({
           text: PropTypes.string.isRequired
-        }).isRequired,
+        }),
         endDate: PropTypes.shape({
           text: PropTypes.string.isRequired
-        }).isRequired,
+        }),
         editUrl: PropTypes.string.isRequired,
         updateApi: PropTypes.string.isRequired,
         deleteApi: PropTypes.string.isRequired

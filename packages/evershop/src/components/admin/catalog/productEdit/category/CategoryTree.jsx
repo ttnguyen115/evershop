@@ -25,28 +25,35 @@ function CategoryTree({ selectedCategory, setSelectedCategory }) {
   const [result] = useQuery({
     query: categoriesQuery,
     variables: {
-      filters: [{ key: 'parent', operation: '=', value: null }]
+      filters: [{ key: 'parent', operation: 'eq', value: null }]
     }
   });
   const { data, fetching, error } = result;
 
   if (fetching) {
-    return <Spinner width={30} height={30} />;
+    return (
+      <div className="category-tree-container absolute top-full left-0 right-0 border rounded">
+        <Spinner width={30} height={30} />
+      </div>
+    );
   }
   if (error) {
     return (
-      <p>
-        Oh no...
-        {error.message}
-      </p>
+      <div className="category-tree-container absolute top-full left-0 right-0 border rounded">
+        <p className="text-critical">{error.message}</p>
+      </div>
     );
   }
   if (data.categories.items.length === 0) {
-    return <div>There is no category</div>;
+    return (
+      <div className="category-tree-container absolute top-full left-0 right-0 border rounded">
+        <div>There is no category</div>
+      </div>
+    );
   }
 
   return (
-    <div>
+    <div className="category-tree-container absolute top-full left-0 right-0 border rounded">
       <ul className="category-tree">
         {data.categories.items.map((category) => (
           <CategoryItem

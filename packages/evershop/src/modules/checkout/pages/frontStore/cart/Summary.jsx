@@ -8,7 +8,7 @@ import { Total } from '@components/frontStore/checkout/checkout/summary/cart/Tot
 
 function Subtotal({ subTotal }) {
   return (
-    <div className="flex justify-between gap-3">
+    <div className="flex justify-between gap-12">
       <div>{_('Sub total')}</div>
       <div className="text-right">{subTotal.text}</div>
     </div>
@@ -16,11 +16,17 @@ function Subtotal({ subTotal }) {
 }
 
 Subtotal.propTypes = {
-  subTotal: PropTypes.number
+  subTotal: PropTypes.shape({
+    value: PropTypes.number,
+    text: PropTypes.string
+  })
 };
 
 Subtotal.defaultProps = {
-  subTotal: 0
+  subTotal: {
+    value: 0,
+    text: ''
+  }
 };
 
 function Discount({ discountAmount, coupon }) {
@@ -28,7 +34,7 @@ function Discount({ discountAmount, coupon }) {
     return null;
   }
   return (
-    <div className="flex justify-between gap-3">
+    <div className="flex justify-between gap-12">
       <div>{_('Discount(${coupon})', { coupon })}</div>
       <div className="text-right">{discountAmount.text}</div>
     </div>
@@ -36,12 +42,18 @@ function Discount({ discountAmount, coupon }) {
 }
 
 Discount.propTypes = {
-  discountAmount: PropTypes.number,
+  discountAmount: PropTypes.shape({
+    value: PropTypes.number,
+    text: PropTypes.string
+  }),
   coupon: PropTypes.string
 };
 
 Discount.defaultProps = {
-  discountAmount: 0,
+  discountAmount: {
+    value: 0,
+    text: ''
+  },
   coupon: ''
 };
 
@@ -51,19 +63,19 @@ function Summary({
     totalQty,
     subTotal,
     subTotalInclTax,
-    taxAmount,
+    totalTaxAmount,
     grandTotal,
     coupon,
     discountAmount
   },
-  setting: { displayCheckoutPriceIncludeTax }
+  setting: { priceIncludingTax }
 }) {
   if (totalQty === undefined || totalQty <= 0) {
     return null;
   }
   return (
     <div className="summary">
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-8">
         <h4>{_('Order summary')}</h4>
         <Area
           id="shoppingCartSummary"
@@ -72,9 +84,7 @@ function Summary({
             {
               component: { default: Subtotal },
               props: {
-                subTotal: displayCheckoutPriceIncludeTax
-                  ? subTotalInclTax
-                  : subTotal
+                subTotal: priceIncludingTax ? subTotalInclTax : subTotal
               },
               sortOrder: 10,
               id: 'shoppingCartSubtotal'
@@ -88,10 +98,10 @@ function Summary({
             {
               // eslint-disable-next-line react/no-unstable-nested-components
               component: {
-                default: displayCheckoutPriceIncludeTax ? () => null : Tax
+                default: priceIncludingTax ? () => null : Tax
               },
               props: {
-                amount: taxAmount.text
+                amount: totalTaxAmount.text
               },
               sortOrder: 30,
               id: 'tax'
@@ -103,8 +113,8 @@ function Summary({
               },
               props: {
                 total: grandTotal.text,
-                taxAmount: taxAmount.text,
-                displayCheckoutPriceIncludeTax
+                totalTaxAmount: totalTaxAmount.text,
+                priceIncludingTax
               },
               sortOrder: 30,
               id: 'tax'
@@ -112,7 +122,7 @@ function Summary({
           ]}
         />
       </div>
-      <div className="shopping-cart-checkout-btn flex justify-between mt-2">
+      <div className="shopping-cart-checkout-btn flex justify-between mt-8">
         <Button url={checkoutUrl} title={_('CHECKOUT')} variant="primary" />
       </div>
     </div>
@@ -131,7 +141,7 @@ Summary.propTypes = {
       value: PropTypes.number,
       text: PropTypes.string
     }),
-    taxAmount: PropTypes.shape({
+    totalTaxAmount: PropTypes.shape({
       value: PropTypes.number,
       text: PropTypes.string
     }),
@@ -146,7 +156,7 @@ Summary.propTypes = {
     })
   }).isRequired,
   setting: PropTypes.shape({
-    displayCheckoutPriceIncludeTax: PropTypes.bool
+    priceIncludingTax: PropTypes.bool
   }).isRequired
 };
 
@@ -165,15 +175,16 @@ export const query = `
         value
         text
       }
-      grandTotal {
-        value
-        text
-      }
       subTotalInclTax {
         value
         text
       }
-      taxAmount {
+      grandTotal {
+        value
+        text
+      }
+      
+      totalTaxAmount {
         value
         text
       }
@@ -184,7 +195,7 @@ export const query = `
       coupon
     }
     setting {
-      displayCheckoutPriceIncludeTax
+      priceIncludingTax
     }
     checkoutUrl: url(routeId: "checkout")
   }

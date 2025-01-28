@@ -7,16 +7,16 @@ import Pagination from '@components/common/grid/Pagination';
 import { Checkbox } from '@components/common/form/fields/Checkbox';
 import { useAlertContext } from '@components/common/modal/Alert';
 import { Card } from '@components/admin/cms/Card';
-import BasicColumnHeader from '@components/common/grid/headers/Basic';
-import FromToColumnHeader from '@components/common/grid/headers/FromTo';
-import ShipmentStatusColumnHeader from '@components/admin/oms/orderGrid/headers/ShipmentStatusColumnHeader';
-import PaymentStatusColumnHeader from '@components/admin/oms/orderGrid/headers/PaymentStatusColumnHeader';
 import OrderNumberRow from '@components/admin/oms/orderGrid/rows/OrderNumberRow';
 import BasicRow from '@components/common/grid/rows/BasicRow';
 import ShipmentStatusRow from '@components/admin/oms/orderGrid/rows/ShipmentStatus';
 import PaymentStatusRow from '@components/admin/oms/orderGrid/rows/PaymentStatus';
 import TotalRow from '@components/admin/oms/orderGrid/rows/TotalRow';
 import CreateAt from '@components/admin/customer/customerGrid/rows/CreateAt';
+import { Form } from '@components/common/form/Form';
+import { Field } from '@components/common/form/Field';
+import SortableHeader from '@components/common/grid/headers/Sortable';
+import Filter from '@components/common/list/Filter';
 
 function Actions({ orders = [], selectedIds = [] }) {
   const { openAlert, closeAlert } = useAlertContext();
@@ -44,6 +44,7 @@ function Actions({ orders = [], selectedIds = [] }) {
             <Checkbox
               name="notify_customer"
               label="Send notification to the customer"
+              onChange={() => {}}
             />
           ),
           primaryAction: {
@@ -70,17 +71,18 @@ function Actions({ orders = [], selectedIds = [] }) {
       {selectedIds.length > 0 && (
         <td style={{ borderTop: 0 }} colSpan="100">
           <div className="inline-flex border border-divider rounded justify-items-start">
-            <a href="#" className="font-semibold pt-075 pb-075 pl-15 pr-15">
+            <a href="#" className="font-semibold pt-3 pb-3 pl-6 pr-6">
               {selectedIds.length} selected
             </a>
-            {actions.map((action) => (
+            {actions.map((action, i) => (
               <a
+                key={i}
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
                   action.onAction();
                 }}
-                className="font-semibold pt-075 pb-075 pl-15 pr-15 block border-l border-divider self-center"
+                className="font-semibold pt-3 pb-3 pl-6 pr-6 block border-l border-divider self-center"
               >
                 <span>{action.name}</span>
               </a>
@@ -104,21 +106,144 @@ Actions.propTypes = {
 
 export default function OrderGrid({
   orders: { items: orders, total, currentFilters = [] },
-  shipmentStatusList,
-  paymentStatusList
+  paymentStatusList,
+  shipmentStatusList
 }) {
   const page = currentFilters.find((filter) => filter.key === 'page')
-    ? currentFilters.find((filter) => filter.key === 'page').value
+    ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
     : 1;
 
   const limit = currentFilters.find((filter) => filter.key === 'limit')
-    ? currentFilters.find((filter) => filter.key === 'limit').value
+    ? parseInt(
+        currentFilters.find((filter) => filter.key === 'limit').value,
+        10
+      )
     : 20;
 
   const [selectedRows, setSelectedRows] = useState([]);
 
   return (
     <Card>
+      <Card.Session
+        title={
+          <Form submitBtn={false} id="orderGridFilter">
+            <div className="flex gap-8 justify-center items-center">
+              <Area
+                id="orderGridFilter"
+                noOuter
+                coreComponents={[
+                  {
+                    component: {
+                      default: () => (
+                        <Field
+                          type="text"
+                          name="keyword"
+                          id="keyword"
+                          placeholder="Search"
+                          value={
+                            currentFilters.find((f) => f.key === 'keyword')
+                              ?.value
+                          }
+                          onKeyPress={(e) => {
+                            // If the user press enter, we should submit the form
+                            if (e.key === 'Enter') {
+                              const url = new URL(document.location);
+                              const keyword =
+                                document.getElementById('keyword')?.value;
+                              if (keyword) {
+                                url.searchParams.set('keyword', keyword);
+                              } else {
+                                url.searchParams.delete('keyword');
+                              }
+                              window.location.href = url;
+                            }
+                          }}
+                        />
+                      )
+                    },
+                    sortOrder: 5
+                  },
+                  {
+                    component: {
+                      default: () => (
+                        <Filter
+                          options={paymentStatusList.map((status) => ({
+                            label: status.name,
+                            value: status.code,
+                            onSelect: () => {
+                              const url = new URL(document.location);
+                              url.searchParams.set(
+                                'payment_status',
+                                status.code
+                              );
+                              window.location.href = url;
+                            }
+                          }))}
+                          selectedOption={
+                            currentFilters.find(
+                              (f) => f.key === 'payment_status'
+                            )
+                              ? currentFilters.find(
+                                  (f) => f.key === 'payment_status'
+                                ).value
+                              : undefined
+                          }
+                          title="Payment status"
+                        />
+                      )
+                    },
+                    sortOrder: 10
+                  },
+                  {
+                    component: {
+                      default: () => (
+                        <Filter
+                          options={shipmentStatusList.map((status) => ({
+                            label: status.name,
+                            value: status.code,
+                            onSelect: () => {
+                              const url = new URL(document.location);
+                              url.searchParams.set(
+                                'shipment_status',
+                                status.code
+                              );
+                              window.location.href = url;
+                            }
+                          }))}
+                          selectedOption={
+                            currentFilters.find(
+                              (f) => f.key === 'shipment_status'
+                            )
+                              ? currentFilters.find(
+                                  (f) => f.key === 'shipment_status'
+                                ).value
+                              : undefined
+                          }
+                          title="Shipment status"
+                        />
+                      )
+                    },
+                    sortOrder: 15
+                  }
+                ]}
+                currentFilters={currentFilters}
+              />
+            </div>
+          </Form>
+        }
+        actions={[
+          {
+            variant: 'interactive',
+            name: 'Clear filter',
+            onAction: () => {
+              // Just get the url and remove all query params
+              const url = new URL(document.location);
+              url.search = '';
+              window.location.href = url.href;
+            }
+          }
+        ]}
+      />
       <table className="listing sticky">
         <thead>
           <tr>
@@ -141,9 +266,9 @@ export default function OrderGrid({
                 {
                   component: {
                     default: () => (
-                      <BasicColumnHeader
+                      <SortableHeader
                         title="Order Number"
-                        id="orderNumber"
+                        name="number"
                         currentFilters={currentFilters}
                       />
                     )
@@ -153,9 +278,9 @@ export default function OrderGrid({
                 {
                   component: {
                     default: () => (
-                      <FromToColumnHeader
+                      <SortableHeader
                         title="Date"
-                        id="createdAt"
+                        name="created_at"
                         currentFilters={currentFilters}
                       />
                     )
@@ -165,9 +290,9 @@ export default function OrderGrid({
                 {
                   component: {
                     default: () => (
-                      <BasicColumnHeader
+                      <SortableHeader
                         title="Customer Email"
-                        id="customerEmail"
+                        name="email"
                         currentFilters={currentFilters}
                       />
                     )
@@ -177,10 +302,9 @@ export default function OrderGrid({
                 {
                   component: {
                     default: () => (
-                      <ShipmentStatusColumnHeader
+                      <SortableHeader
                         title="Shipment Status"
-                        id="shipmentStatus"
-                        shipmentStatusList={shipmentStatusList}
+                        name="shipment_status"
                         currentFilters={currentFilters}
                       />
                     )
@@ -190,10 +314,9 @@ export default function OrderGrid({
                 {
                   component: {
                     default: () => (
-                      <PaymentStatusColumnHeader
+                      <SortableHeader
                         title="Payment Status"
-                        id="paymentStatus"
-                        paymentStatusList={paymentStatusList}
+                        name="payment_status"
                         currentFilters={currentFilters}
                       />
                     )
@@ -203,9 +326,9 @@ export default function OrderGrid({
                 {
                   component: {
                     default: () => (
-                      <FromToColumnHeader
+                      <SortableHeader
                         title="Total"
-                        id="grandTotal"
+                        name="total"
                         currentFilters={currentFilters}
                       />
                     )
@@ -308,26 +431,10 @@ export default function OrderGrid({
 }
 
 OrderGrid.propTypes = {
-  paymentStatusList: PropTypes.arrayOf(
-    PropTypes.shape({
-      text: PropTypes.string.isRequired,
-      value: PropTypes.string.isRequired,
-      badge: PropTypes.string.isRequired,
-      progress: PropTypes.number.isRequired
-    })
-  ).isRequired,
-  shipmentStatusList: PropTypes.arrayOf(
-    PropTypes.shape({
-      text: PropTypes.string.isRequired,
-      value: PropTypes.string.isRequired,
-      badge: PropTypes.string.isRequired,
-      progress: PropTypes.number.isRequired
-    })
-  ).isRequired,
   orders: PropTypes.shape({
     items: PropTypes.arrayOf(
       PropTypes.shape({
-        orderId: PropTypes.number.isRequired,
+        orderId: PropTypes.string.isRequired,
         uuid: PropTypes.string.isRequired,
         orderNumber: PropTypes.string.isRequired,
         createdAt: PropTypes.shape({
@@ -339,13 +446,13 @@ OrderGrid.propTypes = {
           name: PropTypes.string.isRequired,
           code: PropTypes.string.isRequired,
           badge: PropTypes.string.isRequired,
-          progress: PropTypes.number.isRequired
+          progress: PropTypes.string.isRequired
         }).isRequired,
         paymentStatus: PropTypes.shape({
           name: PropTypes.string.isRequired,
           code: PropTypes.string.isRequired,
           badge: PropTypes.string.isRequired,
-          progress: PropTypes.number.isRequired
+          progress: PropTypes.string.isRequired
         }).isRequired,
         grandTotal: PropTypes.shape({
           value: PropTypes.number.isRequired,
@@ -364,12 +471,16 @@ OrderGrid.propTypes = {
       })
     ).isRequired
   }).isRequired,
-  total: PropTypes.number.isRequired,
-  currentFilters: PropTypes.arrayOf(
+  paymentStatusList: PropTypes.arrayOf(
     PropTypes.shape({
-      key: PropTypes.string.isRequired,
-      operation: PropTypes.string.isRequired,
-      value: PropTypes.string.isRequired
+      code: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired
+    })
+  ).isRequired,
+  shipmentStatusList: PropTypes.arrayOf(
+    PropTypes.shape({
+      code: PropTypes.string.isRequired,
+      name: PropTypes.string.isRequired
     })
   ).isRequired
 };
@@ -417,17 +528,13 @@ export const query = `
         value
       }
     }
-    shipmentStatusList {
-      text: name
-      value: code
-      badge
-      progress
-    }
     paymentStatusList {
-      text: name
-      value: code
-      badge
-      progress
+      code
+      name
+    }
+    shipmentStatusList {
+      code
+      name
     }
   }
 `;

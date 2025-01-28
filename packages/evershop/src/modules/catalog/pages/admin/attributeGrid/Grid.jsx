@@ -12,9 +12,11 @@ import AttributeNameRow from '@components/admin/catalog/attributeGrid/rows/Attri
 import GroupRow from '@components/admin/catalog/attributeGrid/rows/GroupRow';
 import BasicRow from '@components/common/grid/rows/BasicRow';
 import YesNoRow from '@components/common/grid/rows/YesNoRow';
-import BasicColumnHeader from '@components/common/grid/headers/Basic';
-import GroupHeader from '@components/admin/catalog/attributeGrid/headers/GroupHeader';
-import DropdownColumnHeader from '@components/common/grid/headers/Dropdown';
+import SortableHeader from '@components/common/grid/headers/Sortable';
+import DummyColumnHeader from '@components/common/grid/headers/Dummy';
+import { Form } from '@components/common/form/Form';
+import { Field } from '@components/common/form/Field';
+import { toast } from 'react-toastify';
 
 function Actions({ attributes = [], selectedIds = [] }) {
   const { openAlert, closeAlert } = useAlertContext();
@@ -22,13 +24,29 @@ function Actions({ attributes = [], selectedIds = [] }) {
 
   const deleteAttributes = async () => {
     setIsLoading(true);
-    const promises = attributes
-      .filter((attribute) => selectedIds.includes(attribute.uuid))
-      .map((attribute) => axios.delete(attribute.deleteApi));
-    await Promise.all(promises);
-    setIsLoading(false);
-    // Refresh the page
-    window.location.reload();
+    try {
+      const promises = attributes
+        .filter((attribute) => selectedIds.includes(attribute.uuid))
+        .map((attribute) =>
+          axios.delete(attribute.deleteApi, {
+            validateStatus: () => true
+          })
+        );
+      const responses = await Promise.allSettled(promises);
+      setIsLoading(false);
+      responses.forEach((response) => {
+        // Get the axios response status code
+        const { status } = response.value;
+        if (status !== 200) {
+          throw new Error(response.value.data.error.message);
+        }
+      });
+      // Refresh the page
+      window.location.reload();
+    } catch (e) {
+      setIsLoading(false);
+      toast.error(e.message);
+    }
   };
 
   const actions = [
@@ -62,17 +80,18 @@ function Actions({ attributes = [], selectedIds = [] }) {
       {selectedIds.length > 0 && (
         <td style={{ borderTop: 0 }} colSpan="100">
           <div className="inline-flex border border-divider rounded justify-items-start">
-            <a href="#" className="font-semibold pt-075 pb-075 pl-15 pr-15">
+            <a href="#" className="font-semibold pt-3 pb-3 pl-6 pr-6">
               {selectedIds.length} selected
             </a>
-            {actions.map((action) => (
+            {actions.map((action, i) => (
               <a
+                key={i}
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
                   action.onAction();
                 }}
-                className="font-semibold pt-075 pb-075 pl-15 pr-15 block border-l border-divider self-center"
+                className="font-semibold pt-3 pb-3 pl-6 pr-6 block border-l border-divider self-center"
               >
                 <span>{action.name}</span>
               </a>
@@ -98,15 +117,58 @@ export default function AttributeGrid({
   attributes: { items: attributes, total, currentFilters = [] }
 }) {
   const page = currentFilters.find((filter) => filter.key === 'page')
-    ? currentFilters.find((filter) => filter.key === 'page').value
+    ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
     : 1;
   const limit = currentFilters.find((filter) => filter.key === 'limit')
-    ? currentFilters.find((filter) => filter.key === 'limit').value
+    ? parseInt(
+        currentFilters.find((filter) => filter.key === 'limit').value,
+        10
+      )
     : 20;
   const [selectedRows, setSelectedRows] = useState([]);
 
   return (
     <Card>
+      <Card.Session
+        title={
+          <Form submitBtn={false} id="attributeGridFilter">
+            <Field
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Search"
+              value={currentFilters.find((f) => f.key === 'name')?.value}
+              onKeyPress={(e) => {
+                // If the user press enter, we should submit the form
+                if (e.key === 'Enter') {
+                  const url = new URL(document.location);
+                  const name = document.getElementById('name')?.value;
+                  if (name) {
+                    url.searchParams.set('name[operation]', 'like');
+                    url.searchParams.set('name[value]', name);
+                  } else {
+                    url.searchParams.delete('name[operation]');
+                    url.searchParams.delete('name[value]');
+                  }
+                  window.location.href = url;
+                }
+              }}
+            />
+          </Form>
+        }
+        actions={[
+          {
+            variant: 'interactive',
+            name: 'Clear filter',
+            onAction: () => {
+              // Just get the url and remove all query params
+              const url = new URL(document.location);
+              url.search = '';
+              window.location.href = url.href;
+            }
+          }
+        ]}
+      />
       <table className="listing sticky">
         <thead>
           <tr>
@@ -127,8 +189,8 @@ export default function AttributeGrid({
                 {
                   component: {
                     default: () => (
-                      <BasicColumnHeader
-                        id="name"
+                      <SortableHeader
+                        name="name"
                         title="Attribute Name"
                         currentFilters={currentFilters}
                       />
@@ -138,25 +200,17 @@ export default function AttributeGrid({
                 },
                 {
                   component: {
-                    default: () => (
-                      <GroupHeader id="group" currentFilters={currentFilters} />
-                    )
+                    default: () => <DummyColumnHeader title="Groups" />
                   },
                   sortOrder: 15
                 },
                 {
                   component: {
                     default: () => (
-                      <DropdownColumnHeader
-                        id="type"
+                      <SortableHeader
+                        name="type"
                         title="Type"
                         currentFilters={currentFilters}
-                        options={[
-                          { value: 'text', text: 'Text' },
-                          { value: 'select', text: 'Select' },
-                          { value: 'multiselect', text: 'Multi Select' },
-                          { value: 'textarea', text: 'Text Area' }
-                        ]}
                       />
                     )
                   },
@@ -165,14 +219,10 @@ export default function AttributeGrid({
                 {
                   component: {
                     default: () => (
-                      <DropdownColumnHeader
-                        id="isRequired"
+                      <SortableHeader
+                        name="is_required"
                         title="Is Required?"
                         currentFilters={currentFilters}
-                        options={[
-                          { value: 1, text: 'Yes' },
-                          { value: 0, text: 'No' }
-                        ]}
                       />
                     )
                   },
@@ -181,14 +231,10 @@ export default function AttributeGrid({
                 {
                   component: {
                     default: () => (
-                      <DropdownColumnHeader
-                        id="isFilterable"
+                      <SortableHeader
+                        name="is_filterable"
                         title="Is Filterable?"
                         currentFilters={currentFilters}
-                        options={[
-                          { value: 1, text: 'Yes' },
-                          { value: 0, text: 'No' }
-                        ]}
                       />
                     )
                   },
@@ -238,7 +284,7 @@ export default function AttributeGrid({
                   },
                   {
                     component: {
-                      default: () => <GroupRow groups={a.groups} />
+                      default: () => <GroupRow groups={a.groups?.items} />
                     },
                     sortOrder: 15
                   },
@@ -252,17 +298,13 @@ export default function AttributeGrid({
                   },
                   {
                     component: {
-                      default: ({ areaProps }) => (
-                        <YesNoRow id="isRequired" areaProps={areaProps} />
-                      )
+                      default: () => <YesNoRow value={a.isRequired} />
                     },
                     sortOrder: 25
                   },
                   {
                     component: {
-                      default: ({ areaProps }) => (
-                        <YesNoRow id="isFilterable" areaProps={areaProps} />
-                      )
+                      default: () => <YesNoRow value={a.isFilterable} />
                     },
                     sortOrder: 30
                   }
@@ -287,12 +329,12 @@ AttributeGrid.propTypes = {
     items: PropTypes.arrayOf(
       PropTypes.shape({
         uuid: PropTypes.string.isRequired,
-        attributeId: PropTypes.number.isRequired,
+        attributeId: PropTypes.string.isRequired,
         attributeName: PropTypes.string.isRequired,
         attributeCode: PropTypes.string.isRequired,
         type: PropTypes.string.isRequired,
-        isRequired: PropTypes.bool.isRequired,
-        isFilterable: PropTypes.bool.isRequired,
+        isRequired: PropTypes.number.isRequired,
+        isFilterable: PropTypes.number.isRequired,
         editUrl: PropTypes.string.isRequired,
         updateApi: PropTypes.string.isRequired,
         deleteApi: PropTypes.string.isRequired
@@ -329,9 +371,11 @@ export const query = `
         updateApi
         deleteApi
         groups {
-          attributeGroupId
-          groupName
-          updateApi
+          items {
+            attributeGroupId
+            groupName
+            updateApi
+          }
         }
       }
       total

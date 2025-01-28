@@ -12,29 +12,25 @@ function OrderSummary({
   subTotalInclTax,
   shippingMethodName,
   shippingFeeInclTax,
-  taxAmount,
+  totalTaxAmount,
   discountAmount,
   coupon,
   grandTotal,
-  displayCheckoutPriceIncludeTax
+  priceIncludingTax
 }) {
   return (
     <div className="checkout-summary-block">
       <Subtotal
         count={items.length}
-        total={
-          displayCheckoutPriceIncludeTax ? subTotalInclTax.text : subTotal.text
-        }
+        total={priceIncludingTax ? subTotalInclTax.text : subTotal.text}
       />
       <Shipping method={shippingMethodName} cost={shippingFeeInclTax.text} />
-      {!displayCheckoutPriceIncludeTax && (
-        <Tax taxClass="" amount={taxAmount.text} />
-      )}
+      {!priceIncludingTax && <Tax taxClass="" amount={totalTaxAmount.text} />}
       <Discount code={coupon} discount={discountAmount.text} />
       <Total
         total={grandTotal.text}
-        displayCheckoutPriceIncludeTax={displayCheckoutPriceIncludeTax}
-        taxAmount={taxAmount.text}
+        priceIncludingTax={priceIncludingTax}
+        totalTaxAmount={totalTaxAmount.text}
       />
     </div>
   );
@@ -50,10 +46,12 @@ OrderSummary.propTypes = {
   }),
   items: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      quantity: PropTypes.number.isRequired,
-      price: PropTypes.shape({
+      productName: PropTypes.string.isRequired,
+      qty: PropTypes.number.isRequired,
+      lineTotalInclTax: PropTypes.shape({
+        text: PropTypes.string.isRequired
+      }).isRequired,
+      lineTotal: PropTypes.shape({
         text: PropTypes.string.isRequired
       }).isRequired
     })
@@ -68,10 +66,10 @@ OrderSummary.propTypes = {
   subTotalInclTax: PropTypes.shape({
     text: PropTypes.string
   }),
-  taxAmount: PropTypes.shape({
+  totalTaxAmount: PropTypes.shape({
     text: PropTypes.string
   }),
-  displayCheckoutPriceIncludeTax: PropTypes.bool.isRequired
+  priceIncludingTax: PropTypes.bool.isRequired
 };
 
 OrderSummary.defaultProps = {
@@ -92,7 +90,7 @@ OrderSummary.defaultProps = {
   subTotalInclTax: {
     text: '0.00'
   },
-  taxAmount: {
+  totalTaxAmount: {
     text: '0.00'
   }
 };

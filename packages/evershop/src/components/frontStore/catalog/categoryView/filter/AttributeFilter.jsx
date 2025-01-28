@@ -24,8 +24,15 @@ export function AttributeFilter({
           // Update the filter
           updateFilter(
             currentFilters.map((f) => {
-              if (f.key !== attributeCode) return f;
-              else return { key: attributeCode, value: value.join(',') };
+              if (f.key !== attributeCode) {
+                return f;
+              } else {
+                return {
+                  key: attributeCode,
+                  operation: 'in',
+                  value: value.join(',')
+                };
+              }
             })
           );
         }
@@ -33,18 +40,25 @@ export function AttributeFilter({
         // Add the option to the filter
         updateFilter(
           currentFilters.map((f) => {
-            if (f.key !== attributeCode) return f;
-            else
+            if (f.key !== attributeCode) {
+              return f;
+            } else {
               return {
                 key: attributeCode,
+                operation: 'in',
                 value: value.concat(optionId).join(',')
               };
+            }
           })
         );
       }
     } else {
       updateFilter(
-        currentFilters.concat({ key: attributeCode, value: optionId })
+        currentFilters.concat({
+          key: attributeCode,
+          operation: 'in',
+          value: optionId
+        })
       );
     }
   };
@@ -52,7 +66,7 @@ export function AttributeFilter({
   return (
     <>
       {availableAttributes.map((a) => (
-        <div key={a.attributeCode} className="attribute-filter mt-2">
+        <div key={a.attributeCode} className="attribute-filter mt-8">
           <div className="filter-item-title">
             <span className="font-medium">{a.attributeName}</span>
           </div>
@@ -65,7 +79,7 @@ export function AttributeFilter({
               );
 
               return (
-                <li key={o.optionId} className="mt-05 mr-05">
+                <li key={o.optionId} className="mt-2 mr-2">
                   <a
                     href="#"
                     className="flex justify-start items-center"

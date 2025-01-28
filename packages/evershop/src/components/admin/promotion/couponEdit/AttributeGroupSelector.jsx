@@ -37,13 +37,13 @@ function AttributeGroupSelector({
     variables: {
       filters: inputValue
         ? [
-            { key: 'name', operation: '=', value: inputValue },
-            { key: 'page', operation: '=', value: page.toString() },
-            { key: 'limit', operation: '=', value: limit.toString() }
+            { key: 'name', operation: 'eq', value: inputValue },
+            { key: 'page', operation: 'eq', value: page.toString() },
+            { key: 'limit', operation: 'eq', value: limit.toString() }
           ]
         : [
-            { key: 'limit', operation: '=', value: limit.toString() },
-            { key: 'page', operation: '=', value: page.toString() }
+            { key: 'limit', operation: 'eq', value: limit.toString() },
+            { key: 'page', operation: 'eq', value: page.toString() }
           ]
     },
     pause: true
@@ -101,10 +101,10 @@ function AttributeGroupSelector({
       <div className="modal-content">
         <Card.Session>
           <div>
-            <div className="border rounded border-divider mb-2">
+            <div className="border rounded border-divider mb-8">
               <input
                 type="text"
-                value={inputValue}
+                value={inputValue || ''}
                 placeholder="Search attribute groups"
                 onChange={(e) => setInputValue(e.target.value)}
               />
@@ -128,7 +128,7 @@ function AttributeGroupSelector({
                 {data.attributeGroups.items.map((group) => (
                   <div
                     key={group.uuid}
-                    className="grid grid-cols-8 gap-2 py-1 border-divider items-center"
+                    className="grid grid-cols-8 gap-8 py-4 border-divider items-center"
                   >
                     <div className="col-span-5">
                       <h3>{group.groupName}</h3>
@@ -167,9 +167,9 @@ function AttributeGroupSelector({
         </Card.Session>
       </div>
       <Card.Session>
-        <div className="flex justify-between gap-2">
+        <div className="flex justify-between gap-8">
           <SimplePageination
-            total={data?.attributeGroups.total}
+            total={data?.attributeGroups.total || 0}
             count={data?.attributeGroups?.items?.length || 0}
             page={page}
             hasNext={limit * page < data?.attributeGroups.total}

@@ -2,10 +2,10 @@
 The `Collection` type represents a product collection.
 """
 type Collection {
-  collectionId: ID!
+  collectionId: Int!
   uuid: String!
   name: String!
-  description: String
+  description: JSON
   code: String!
   products(filters: [FilterInput]): ProductCollection
 }

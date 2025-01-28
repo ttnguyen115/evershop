@@ -13,7 +13,13 @@ const {
   parseGraphql
 } = require('@evershop/evershop/src/lib/webpack/util/parseGraphql');
 const JSON5 = require('json5');
-const { error } = require('@evershop/evershop/src/lib/log/debuger');
+const { error } = require('@evershop/evershop/src/lib/log/logger');
+const {
+  getEnabledWidgets
+} = require('@evershop/evershop/src/lib/util/getEnabledWidgets');
+const {
+  generateComponentKey
+} = require('@evershop/evershop/src/lib/webpack/util/keyGenerator');
 /**
  * Only pass the page routes, not api routes
  */
@@ -21,6 +27,7 @@ module.exports.buildEntry = async function buildEntry(
   routes,
   clientOnly = false
 ) {
+  const widgets = getEnabledWidgets();
   await Promise.all(
     routes.map(async (route) => {
       const subPath = getRouteBuildPath(route);
@@ -46,9 +53,9 @@ module.exports.buildEntry = async function buildEntry(
             .replace(/(['"])?([a-zA-Z0-9_]+)(['"])?:/g, '"$2": ');
           try {
             const layout = JSON5.parse(check);
-            const id = Buffer.from(
+            const id = generateComponentKey(
               module.replace(CONSTANTS.ROOTPATH, '')
-            ).toString('base64');
+            );
             areas[layout.areaId] = areas[layout.areaId] || {};
             areas[layout.areaId][id] = {
               id,
@@ -70,6 +77,16 @@ module.exports.buildEntry = async function buildEntry(
         route.isAdmin ? 'HydrateAdmin' : 'HydrateFrontStore'
       }';
       `;
+      areas['*'] = areas['*'] || {};
+      widgets.forEach((widget) => {
+        areas['*'][widget.type] = {
+          id: widget.type,
+          sortOrder: widget.sortOrder || 0,
+          component: route.isAdmin
+            ? `---require('${widget.setting_component}')---`
+            : `---require('${widget.component}')---`
+        };
+      });
       contentClient += '\r\n';
       contentClient += `Area.defaultProps.components = ${inspect(areas, {
         depth: 5
@@ -93,6 +110,7 @@ module.exports.buildEntry = async function buildEntry(
         /** Build query */
         const query = `${JSON.stringify(parseGraphql(components))}`;
 
+        // Loop through the widgets config and add the query to the widgets
         let contentServer = `import React from 'react'; `;
         contentServer += '\r\n';
         contentServer += `import ReactDOM from 'react-dom'; `;

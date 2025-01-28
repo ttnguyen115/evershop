@@ -8,13 +8,16 @@ export default function Collections({ product: { collections } }) {
     <Card title="Collections" subdued>
       <Card.Session>
         {collections.map((collection) => (
-            <div className="flex justify-start gap-1 items-center align-middle">
-              <CollectionIcon width={16} height={16} fill="#2c6ecb" />
-              <a href={collection.editUrl} className="hover:underline">
-                <span>{collection.name}</span>
-              </a>
-            </div>
-          ))}
+          <div
+            className="flex justify-start gap-4 items-center align-middle"
+            key={collection.uuid}
+          >
+            <CollectionIcon width={16} height={16} fill="#2c6ecb" />
+            <a href={collection.editUrl} className="hover:underline">
+              <span>{collection.name}</span>
+            </a>
+          </div>
+        ))}
         {collections.length === 0 && (
           <div className="text-gray-500">No collections</div>
         )}
@@ -27,7 +30,9 @@ Collections.propTypes = {
   product: PropTypes.shape({
     collections: PropTypes.arrayOf(
       PropTypes.shape({
-        name: PropTypes.string.isRequired
+        name: PropTypes.string.isRequired,
+        editUrl: PropTypes.string.isRequired,
+        uuid: PropTypes.string.isRequired
       })
     )
   })
@@ -48,6 +53,7 @@ export const query = `
   query Query {
     product(id: getContextValue("productId", null)) {
       collections {
+        uuid
         name
         editUrl
       }

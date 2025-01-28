@@ -10,13 +10,14 @@ export default function StripePayment({
     stripeDislayName,
     stripePublishableKey,
     stripeSecretKey,
-    stripeEndpointSecret
+    stripeEndpointSecret,
+    stripePaymentMode
   }
 }) {
   return (
     <Card title="Stripe Payment">
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Enable?</h4>
           </div>
@@ -26,7 +27,7 @@ export default function StripePayment({
         </div>
       </Card.Session>
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Dislay Name</h4>
           </div>
@@ -41,7 +42,7 @@ export default function StripePayment({
         </div>
       </Card.Session>
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Publishable Key</h4>
           </div>
@@ -56,7 +57,7 @@ export default function StripePayment({
         </div>
       </Card.Session>
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Secret Key</h4>
           </div>
@@ -71,7 +72,7 @@ export default function StripePayment({
         </div>
       </Card.Session>
       <Card.Session>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-8">
           <div className="col-span-1 items-center flex">
             <h4>Webhook Secret Key</h4>
           </div>
@@ -81,6 +82,26 @@ export default function StripePayment({
               name="stripeEndpointSecret"
               placeholder="Secret Key"
               value={stripeEndpointSecret}
+              instruction="Your webhook url should be: https://yourdomain.com/api/stripe/webhook"
+            />
+          </div>
+        </div>
+      </Card.Session>
+      <Card.Session>
+        <div className="grid grid-cols-3 gap-8">
+          <div className="col-span-1 items-center flex">
+            <h4>Payment mode</h4>
+          </div>
+          <div className="col-span-2">
+            <Field
+              type="radio"
+              name="stripePaymentMode"
+              placeholder="Payment Mode"
+              value={stripePaymentMode}
+              options={[
+                { text: 'Authorize only', value: 'authorizeOnly' },
+                { text: 'Capture', value: 'capture' }
+              ]}
             />
           </div>
         </div>
@@ -91,11 +112,12 @@ export default function StripePayment({
 
 StripePayment.propTypes = {
   setting: PropTypes.shape({
-    stripePaymentStatus: PropTypes.bool,
+    stripePaymentStatus: PropTypes.number,
     stripeDislayName: PropTypes.string,
     stripePublishableKey: PropTypes.string,
     stripeSecretKey: PropTypes.string,
-    stripeEndpointSecret: PropTypes.string
+    stripeEndpointSecret: PropTypes.string,
+    stripePaymentMode: PropTypes.string
   }).isRequired
 };
 
@@ -112,6 +134,7 @@ export const query = `
       stripePublishableKey
       stripeSecretKey
       stripeEndpointSecret
+      stripePaymentMode
     }
   }
 `;

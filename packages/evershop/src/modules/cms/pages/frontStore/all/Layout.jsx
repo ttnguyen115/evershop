@@ -8,7 +8,7 @@ export default function Layout() {
   return (
     <>
       <LoadingBar />
-      <div className="header flex justify-between">
+      <div className="header grid grid-cols-3">
         <Area
           id="header"
           noOuter
@@ -17,7 +17,7 @@ export default function Layout() {
               component: { default: Area },
               props: {
                 id: 'icon-wrapper',
-                className: 'icon-wrapper flex justify-between space-x-1'
+                className: 'icon-wrapper flex justify-end space-x-4'
               },
               sortOrder: 20
             }
@@ -25,7 +25,7 @@ export default function Layout() {
         />
       </div>
       <main className="content">
-        <Area id="content" className="" noOuter />
+        <Area id="content" noOuter />
       </main>
       <div className="footer">
         <Area id="footer" noOuter coreComponents={[]} />

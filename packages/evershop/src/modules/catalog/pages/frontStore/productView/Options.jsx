@@ -10,8 +10,8 @@ export default function Options({ options = [] }) {
   }
 
   return (
-    <div className="product-single-options mt-4 mb-4">
-      <div className="product-single-options-title mb-2">
+    <div className="product-single-options mt-16 mb-16">
+      <div className="product-single-options-title mb-8">
         <strong>Options</strong>
       </div>
       {options.map((o, i) => {
@@ -77,7 +77,11 @@ Options.propTypes = {
       optionName: PropTypes.string,
       optionType: PropTypes.string
     })
-  ).isRequired
+  )
+};
+
+Options.defaultProps = {
+  options: []
 };
 
 export const layout = {

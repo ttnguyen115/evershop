@@ -9,15 +9,17 @@ interface ShoppingCart {
   customerFullName: String
   userIp: String
   userId: String
-  status: Int!
   coupon: String
   shippingFeeExclTax: Price!
   shippingFeeInclTax: Price!
   discountAmount: Price!
   subTotal: Price!
+  subTotalWithDiscount: Price!
+  subTotalWithDiscountInclTax: Price!
   totalQty: Int!
   totalWeight: Weight!
   taxAmount: Price!
+  taxAmountBeforeDiscount: Price!
   grandTotal: Price!
   shippingMethod: String
   shippingMethodName: String
@@ -44,8 +46,12 @@ interface ShoppingCartItem {
   finalPriceInclTax: Price!
   taxPercent: Float!
   taxAmount: Price!
+  taxAmountBeforeDiscount: Price!
   discountAmount: Price!
-  total: Price!
+  lineTotal: Price!
+  lineTotalWithDiscount: Price!
+  lineTotalWithDiscountInclTax: Price!
+  lineTotalInclTax: Price!
   variantGroupId: Int
   variantOptions: String
   productCustomOptions: String
@@ -90,6 +96,7 @@ type CartItem implements ShoppingCartItem {
   uuid: String!
   cartId: ID!
   removeApi: String!
+  updateQtyApi: String!
   productId: ID!
   productSku: String!
   productName: String
@@ -102,9 +109,14 @@ type CartItem implements ShoppingCartItem {
   finalPriceInclTax: Price!
   taxPercent: Float!
   taxAmount: Price!
+  taxAmountBeforeDiscount: Price!
   discountAmount: Price!
-  subTotal: Price!
-  total: Price!
+  lineTotal: Price!
+  subTotal: Price! # Deprecated, this field is equivalent to lineTotal
+  lineTotalWithDiscount: Price!
+  lineTotalWithDiscountInclTax: Price!
+  lineTotalInclTax: Price!
+  total: Price! # Deprecated, this field is equivalent to lineTotalInclTax
   variantGroupId: Int
   variantOptions: String
   productCustomOptions: String
@@ -132,12 +144,17 @@ type Cart implements ShoppingCart {
   coupon: String
   shippingFeeExclTax: Price!
   shippingFeeInclTax: Price!
+  shippingTaxAmount: Price!
   discountAmount: Price!
   subTotal: Price!
   subTotalInclTax: Price!
+  subTotalWithDiscount: Price!
+  subTotalWithDiscountInclTax: Price!
   totalQty: Int!
   totalWeight: Weight!
   taxAmount: Price!
+  taxAmountBeforeDiscount: Price!
+  totalTaxAmount: Price!
   grandTotal: Price!
   shippingMethod: String
   shippingMethodName: String
@@ -149,6 +166,7 @@ type Cart implements ShoppingCart {
   addShippingMethodApi: String!
   addContactInfoApi: String!
   addAddressApi: String!
+  addNoteApi: String!
 }
 
 extend type Query {

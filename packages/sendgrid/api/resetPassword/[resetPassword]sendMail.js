@@ -2,12 +2,13 @@ const {
   INTERNAL_SERVER_ERROR
 } = require('@evershop/evershop/src/lib/util/httpStatus');
 const { buildUrl } = require('@evershop/evershop/src/lib/router/buildUrl');
-const { debug } = require('@evershop/evershop/src/lib/log/debuger');
+const { error } = require('@evershop/evershop/src/lib/log/logger');
 const {
   getContextValue
 } = require('@evershop/evershop/src/modules/graphql/services/contextHelper');
 const { getConfig } = require('@evershop/evershop/src/lib/util/getConfig');
 const sgMail = require('@sendgrid/mail');
+const { getEnv } = require('@evershop/evershop/src/lib/util/getEnv');
 
 // eslint-disable-next-line no-unused-vars
 module.exports = async (request, response, delegate, next) => {
@@ -17,7 +18,7 @@ module.exports = async (request, response, delegate, next) => {
     } = response;
 
     // Check if the API key is set
-    const apiKey = getConfig('sendgrid.apiKey', '');
+    const apiKey = getEnv('SENDGRID_API_KEY', '');
     const from = getConfig('sendgrid.from', '');
 
     if (!apiKey || !from) {
@@ -58,7 +59,7 @@ module.exports = async (request, response, delegate, next) => {
     await sgMail.send(msg);
     next();
   } catch (e) {
-    debug('critical', e);
+    error(e);
     response.status(INTERNAL_SERVER_ERROR);
     response.json({
       error: {

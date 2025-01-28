@@ -68,7 +68,7 @@ export default function TaxSetting({
   if (countriesQueryData.fetching || taxClassesQueryData.fetching) {
     return (
       <div className="main-content-inner">
-        <div className="grid grid-cols-6 gap-x-2 grid-flow-row ">
+        <div className="grid grid-cols-6 gap-x-8 grid-flow-row ">
           <div className="col-span-2">
             <SettingMenu />
           </div>
@@ -82,11 +82,11 @@ export default function TaxSetting({
 
   return (
     <div className="main-content-inner">
-      <div className="grid grid-cols-6 gap-x-2 grid-flow-row ">
+      <div className="grid grid-cols-6 gap-x-8 grid-flow-row ">
         <div className="col-span-2">
           <SettingMenu />
         </div>
-        <div className="col-span-4 grid grid-cols-1 gap-2">
+        <div className="col-span-4 grid grid-cols-1 gap-8">
           <Card>
             <Card.Session title="Tax">
               <div>
@@ -107,13 +107,13 @@ export default function TaxSetting({
                   }
                 }}
               >
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-8">
                   <div>
                     <Field
                       type="select"
                       name="defaultShippingTaxClassId"
                       label="Shipping tax class"
-                      value={setting.defaultShippingTaxClassId}
+                      value={setting.defaultShippingTaxClassId || ''}
                       placeholder="None"
                       disableDefaultOption={false}
                       options={[
@@ -140,7 +140,7 @@ export default function TaxSetting({
                       type="select"
                       name="baseCalculationAddress"
                       label="Base calculation address"
-                      value={setting.baseCalculationAddress}
+                      value={setting.baseCalculationAddress || ''}
                       options={[
                         {
                           value: 'shippingAddress',
@@ -206,8 +206,8 @@ TaxSetting.propTypes = {
   createTaxClassApi: PropTypes.string.isRequired,
   saveSettingApi: PropTypes.string.isRequired,
   setting: PropTypes.shape({
-    defaultProductTaxClassId: PropTypes.string,
-    defaultShippingTaxClassId: PropTypes.string,
+    defaultProductTaxClassId: PropTypes.number,
+    defaultShippingTaxClassId: PropTypes.number,
     baseCalculationAddress: PropTypes.string
   }).isRequired
 };

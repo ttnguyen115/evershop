@@ -10,9 +10,11 @@ import { useAlertContext } from '@components/common/modal/Alert';
 import { Checkbox } from '@components/common/form/fields/Checkbox';
 import { Card } from '@components/admin/cms/Card';
 import CollectionNameRow from '@components/admin/catalog/collectionGrid/rows/CollectionNameRow';
-import BasicColumnHeader from '@components/common/grid/headers/Basic';
 import TextRow from '@components/common/grid/rows/TextRow';
 import DummyColumnHeader from '@components/common/grid/headers/Dummy';
+import SortableHeader from '@components/common/grid/headers/Sortable';
+import { Form } from '@components/common/form/Form';
+import { Field } from '@components/common/form/Field';
 
 function Actions({ collections = [], selectedIds = [] }) {
   const { openAlert, closeAlert } = useAlertContext();
@@ -60,7 +62,7 @@ function Actions({ collections = [], selectedIds = [] }) {
       {selectedIds.length > 0 && (
         <td style={{ borderTop: 0 }} colSpan="100">
           <div className="inline-flex border border-divider rounded justify-items-start">
-            <a href="#" className="font-semibold pt-075 pb-075 pl-15 pr-15">
+            <a href="#" className="font-semibold pt-3 pb-3 pl-6 pr-6">
               {selectedIds.length} selected
             </a>
             {actions.map((action, index) => (
@@ -71,7 +73,7 @@ function Actions({ collections = [], selectedIds = [] }) {
                   e.preventDefault();
                   action.onAction();
                 }}
-                className="font-semibold pt-075 pb-075 pl-15 pr-15 block border-l border-divider self-center"
+                className="font-semibold pt-3 pb-3 pl-6 pr-6 block border-l border-divider self-center"
               >
                 <span>{action.name}</span>
               </a>
@@ -96,16 +98,59 @@ export default function CollectionGrid({
   collections: { items: collections, total, currentFilters = [] }
 }) {
   const page = currentFilters.find((filter) => filter.key === 'page')
-    ? currentFilters.find((filter) => filter.key === 'page').value
+    ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
     : 1;
   const limit = currentFilters.find((filter) => filter.key === 'limit')
-    ? currentFilters.find((filter) => filter.key === 'limit').value
+    ? parseInt(
+        currentFilters.find((filter) => filter.key === 'limit').value,
+        10
+      )
     : 20;
   const [selectedRows, setSelectedRows] = useState([]);
 
   return (
     <div className="w-2/3" style={{ margin: '0 auto' }}>
       <Card>
+        <Card.Session
+          title={
+            <Form submitBtn={false} id="collectionGridFilter">
+              <Field
+                type="text"
+                id="name"
+                name="name"
+                placeholder="Search"
+                value={currentFilters.find((f) => f.key === 'name')?.value}
+                onKeyPress={(e) => {
+                  // If the user press enter, we should submit the form
+                  if (e.key === 'Enter') {
+                    const url = new URL(document.location);
+                    const name = document.getElementById('name')?.value;
+                    if (name) {
+                      url.searchParams.set('name[operation]', 'like');
+                      url.searchParams.set('name[value]', name);
+                    } else {
+                      url.searchParams.delete('name[operation]');
+                      url.searchParams.delete('name[value]');
+                    }
+                    window.location.href = url;
+                  }
+                }}
+              />
+            </Form>
+          }
+          actions={[
+            {
+              variant: 'interactive',
+              name: 'Clear filter',
+              onAction: () => {
+                // Just get the url and remove all query params
+                const url = new URL(document.location);
+                url.search = '';
+                window.location.href = url.href;
+              }
+            }
+          ]}
+        />
         <table className="listing sticky">
           <thead>
             <tr>
@@ -140,9 +185,9 @@ export default function CollectionGrid({
                   {
                     component: {
                       default: () => (
-                        <BasicColumnHeader
+                        <SortableHeader
                           title="Collection Name"
-                          id="name"
+                          name="name"
                           currentFilters={currentFilters}
                         />
                       )
@@ -152,9 +197,9 @@ export default function CollectionGrid({
                   {
                     component: {
                       default: () => (
-                        <BasicColumnHeader
+                        <SortableHeader
                           title="Code"
-                          id="code"
+                          name="code"
                           currentFilters={currentFilters}
                         />
                       )
@@ -194,7 +239,9 @@ export default function CollectionGrid({
                   coreComponents={[
                     {
                       component: {
-                        default: () => <TextRow text={c.collectionId} />
+                        default: () => (
+                          <TextRow text={c.collectionId.toString()} />
+                        )
                       },
                       sortOrder: 5
                     },

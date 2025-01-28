@@ -51,7 +51,7 @@ export default function DiscountType({ coupon = {} }) {
           ]}
         />
       </div>
-      <div className="mt-1">
+      <div className="mt-4">
         <TargetProducts
           products={get(targetProducts, 'products', [])}
           maxQty={get(targetProducts, 'maxQty', '')}
@@ -84,7 +84,12 @@ DiscountType.propTypes = {
         PropTypes.shape({
           key: PropTypes.string,
           operator: PropTypes.string,
-          value: PropTypes.string,
+          value: PropTypes.oneOfType([
+            PropTypes.string,
+            PropTypes.number,
+            PropTypes.arrayOf(PropTypes.string),
+            PropTypes.arrayOf(PropTypes.number)
+          ]),
           qty: PropTypes.string
         })
       )

@@ -1,14 +1,16 @@
 import PropTypes from 'prop-types';
 import React from 'react';
+import { useQuery } from 'urql';
 import Area from '@components/common/Area';
 import { Field } from '@components/common/form/Field';
 import { Card } from '@components/admin/cms/Card';
-import CkeditorField from '@components/common/form/fields/Ckeditor';
-import CategoryTree from '@components/admin/catalog/productEdit/category/CategoryTree';
+import Editor from '@components/common/form/fields/Editor';
+import { useModal } from '@components/common/modal/useModal';
+import CategorySelector from '@components/admin/promotion/couponEdit/CategorySelector';
 
 function SKUPriceWeight({ sku, price, weight, setting }) {
   return (
-    <div className="grid grid-cols-3 gap-1 mt-15">
+    <div className="grid grid-cols-3 gap-4 mt-6">
       <div>
         <Field
           id="sku"
@@ -49,9 +51,13 @@ function SKUPriceWeight({ sku, price, weight, setting }) {
 }
 
 SKUPriceWeight.propTypes = {
-  price: PropTypes.number,
+  price: PropTypes.shape({
+    value: PropTypes.number
+  }),
   sku: PropTypes.string,
-  weight: PropTypes.number,
+  weight: PropTypes.shape({
+    value: PropTypes.number
+  }),
   setting: PropTypes.shape({
     storeCurrency: PropTypes.string,
     weightUnit: PropTypes.string
@@ -64,81 +70,142 @@ SKUPriceWeight.defaultProps = {
   weight: undefined
 };
 
-function Category({ product }) {
-  const [selecting, setSelecting] = React.useState(false);
-  const [category, setCategory] = React.useState(
-    product ? product.category : null
-  );
+const CategoryQuery = `
+  query Query ($id: Int!) {
+    category(id: $id) {
+      name
+      path {
+        name
+      }
+    }
+  }
+`;
 
+function ProductCategory({ categoryId, onChange, onUnassign }) {
+  const [result] = useQuery({
+    query: CategoryQuery,
+    variables: {
+      id: parseInt(categoryId, 10)
+    }
+  });
+  const { data, fetching, error } = result;
+  if (error) {
+    return (
+      <p className="text-critical">
+        There was an error fetching categories.
+        {error.message}
+      </p>
+    );
+  }
+  if (fetching) {
+    return <span>Loading...</span>;
+  }
   return (
-    <div className="mt-15 relative">
-      <div className="mb-1">Category</div>
-      {category && (
-        <div className="border rounded border-[#c9cccf] mb-1 p-1">
-          {category.path.map((item, index) => (
-            <span key={item.name} className="text-gray-500">
-              {item.name}
-              {index < category.path.length - 1 && ' > '}
-            </span>
-          ))}
-          <span className="text-interactive pl-2">
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setSelecting(true);
-              }}
-            >
-              Change
-            </a>
-            <a
-              href="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setCategory(null);
-              }}
-              className="text-critical ml-2"
-            >
-              Unassign
-            </a>
-          </span>
-        </div>
-      )}
-      {!selecting && !category && (
+    <div>
+      {data.category.path.map((item, index) => (
+        <span key={item.name} className="text-gray-500">
+          {item.name}
+          {index < data.category.path.length - 1 && ' > '}
+        </span>
+      ))}
+      <span className="text-interactive pl-8">
         <a
           href="#"
           onClick={(e) => {
             e.preventDefault();
-            setSelecting(!selecting);
+            onChange();
+          }}
+        >
+          Change
+        </a>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onUnassign();
+          }}
+          className="text-critical ml-8"
+        >
+          Unassign
+        </a>
+      </span>
+    </div>
+  );
+}
+
+ProductCategory.propTypes = {
+  categoryId: PropTypes.number.isRequired,
+  onChange: PropTypes.func.isRequired,
+  onUnassign: PropTypes.func.isRequired
+};
+
+function CategorySelect({ product }) {
+  const [category, setCategory] = React.useState(
+    product ? product.category?.categoryId : null
+  );
+  const modal = useModal();
+
+  const closeModal = () => {
+    modal.closeModal();
+  };
+
+  const onSelect = (categoryID) => {
+    setCategory(categoryID);
+    closeModal();
+  };
+  return (
+    <div className="mt-6 relative">
+      <div className="mb-4">Category</div>
+      {category && (
+        <div className="border rounded border-[#c9cccf] mb-4 p-4">
+          <ProductCategory
+            categoryId={category}
+            onChange={() => modal.openModal()}
+            onUnassign={() => setCategory(null)}
+          />
+        </div>
+      )}
+      {!category && (
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            modal.openModal();
           }}
           className="text-interactive"
         >
           Select category
         </a>
       )}
-      {selecting && (
-        <div className="absolute top-5 left-0 right-0 bg-[#eff2f5] z-50 border rounded border-[#c9cccf] p-[10px]">
-          <CategoryTree
-            selectedCategory={category}
-            setSelectedCategory={(cat) => {
-              setCategory(cat);
-              setSelecting(false);
-            }}
-          />
+      {modal.state.showing && (
+        <div className={modal.className} onAnimationEnd={modal.onAnimationEnd}>
+          <div
+            className="modal-wrapper flex self-center justify-center items-center"
+            tabIndex={-1}
+            role="dialog"
+          >
+            <div className="modal">
+              <CategorySelector
+                onSelect={onSelect}
+                onUnSelect={() => {}}
+                selectedIDs={category ? [category] : []}
+                closeModal={closeModal}
+              />
+            </div>
+          </div>
         </div>
       )}
-      {category && (
-        <input type="hidden" name="category_id" value={category?.categoryId} />
-      )}
+      {category && <input type="hidden" name="category_id" value={category} />}
+      {!category && <input type="hidden" name="category_id" value="" />}
     </div>
   );
 }
 
-Category.propTypes = {
+CategorySelect.propTypes = {
   product: PropTypes.shape({
     category: PropTypes.shape({
       categoryId: PropTypes.number.isRequired,
-      name: PropTypes.string.isRequired,
+      name: PropTypes.string,
       path: PropTypes.arrayOf(
         PropTypes.shape({
           name: PropTypes.string.isRequired
@@ -148,7 +215,7 @@ Category.propTypes = {
   })
 };
 
-Category.defaultProps = {
+CategorySelect.defaultProps = {
   product: {
     category: {}
   }
@@ -206,7 +273,7 @@ export default function General({
               id: 'SKUPriceWeight'
             },
             {
-              component: { default: Category },
+              component: { default: CategorySelect },
               props: {
                 product
               },
@@ -218,7 +285,7 @@ export default function General({
               props: {
                 id: 'tax_class',
                 name: 'tax_class',
-                value: product?.taxClass || null,
+                value: product?.taxClass || '',
                 type: 'select',
                 label: 'Tax class',
                 options: [...taxClasses],
@@ -229,7 +296,7 @@ export default function General({
               id: 'tax_class'
             },
             {
-              component: { default: CkeditorField },
+              component: { default: Editor },
               props: {
                 id: 'description',
                 name: 'description',
@@ -256,7 +323,20 @@ General.propTypes = {
   folderCreateApi: PropTypes.string.isRequired,
   uploadApi: PropTypes.string.isRequired,
   product: PropTypes.shape({
-    description: PropTypes.string,
+    description: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        size: PropTypes.number.isRequired,
+        columns: PropTypes.arrayOf(
+          PropTypes.shape({
+            id: PropTypes.string.isRequired,
+            size: PropTypes.number.isRequired,
+            // eslint-disable-next-line react/forbid-prop-types
+            data: PropTypes.object.isRequired
+          })
+        )
+      })
+    ),
     name: PropTypes.string,
     price: PropTypes.shape({
       regular: PropTypes.shape({
@@ -264,7 +344,7 @@ General.propTypes = {
         value: PropTypes.number
       })
     }),
-    productId: PropTypes.string,
+    productId: PropTypes.number,
     taxClass: PropTypes.number,
     sku: PropTypes.string,
     weight: PropTypes.shape({

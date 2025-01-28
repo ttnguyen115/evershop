@@ -24,7 +24,7 @@ function CategoryItem({ category, selectedCategory, setSelectedCategory }) {
   const [result] = useQuery({
     query: childrenQuery,
     variables: {
-      filters: [{ key: 'parent', operation: '=', value: category.categoryId }]
+      filters: [{ key: 'parent', operation: 'eq', value: category.categoryId }]
     },
     pause: !expanded
   });
@@ -32,16 +32,11 @@ function CategoryItem({ category, selectedCategory, setSelectedCategory }) {
   const { data, fetching, error } = result;
 
   if (error) {
-    return (
-      <p>
-        Oh no...
-        {error.message}
-      </p>
-    );
+    return <p className="text-critical">{error.message}</p>;
   }
   return (
     <li>
-      <div className="flex justify-start gap-1 items-center">
+      <div className="flex justify-start gap-4 items-center">
         {!category.children && (
           <a
             href="#"

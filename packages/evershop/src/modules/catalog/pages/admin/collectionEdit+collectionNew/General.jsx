@@ -4,7 +4,7 @@ import Area from '@components/common/Area';
 import { get } from '@evershop/evershop/src/lib/util/get';
 import { Field } from '@components/common/form/Field';
 import { Card } from '@components/admin/cms/Card';
-import CkeditorField from '@components/common/form/fields/Ckeditor';
+import Editor from '@components/common/form/fields/Editor';
 
 export default function General({
   collection,
@@ -50,7 +50,7 @@ export default function General({
       sortOrder: 10
     },
     {
-      component: { default: CkeditorField },
+      component: { default: Editor },
       props: {
         id: 'description',
         name: 'description',
@@ -86,7 +86,20 @@ General.propTypes = {
   uploadApi: PropTypes.string.isRequired,
   collection: PropTypes.shape({
     name: PropTypes.string,
-    description: PropTypes.string,
+    description: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        size: PropTypes.number.isRequired,
+        columns: PropTypes.arrayOf(
+          PropTypes.shape({
+            id: PropTypes.string.isRequired,
+            size: PropTypes.number.isRequired,
+            // eslint-disable-next-line react/forbid-prop-types
+            data: PropTypes.object.isRequired
+          })
+        )
+      })
+    ),
     collectionId: PropTypes.number
   })
 };

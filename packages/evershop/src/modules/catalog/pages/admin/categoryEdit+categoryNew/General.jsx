@@ -4,25 +4,25 @@ import Area from '@components/common/Area';
 import { get } from '@evershop/evershop/src/lib/util/get';
 import { Field } from '@components/common/form/Field';
 import { Card } from '@components/admin/cms/Card';
-import CkeditorField from '@components/common/form/fields/Ckeditor';
 import CategoryTree from '@components/admin/catalog/productEdit/category/CategoryTree';
+import Editor from '@components/common/form/fields/Editor';
 
 function ParentCategory({ currentId, parent }) {
   const [selecting, setSelecting] = React.useState(false);
   const [category, setCategory] = React.useState(parent || null);
 
   return (
-    <div className="mt-15 relative">
-      <div className="mb-1">Parent category</div>
+    <div className="mt-6 relative">
+      <div className="mb-4">Parent category</div>
       {category && (
-        <div className="border rounded border-[#c9cccf] mb-1 p-1">
+        <div className="border rounded border-[#c9cccf] mb-4 p-4">
           {category.path.map((item, index) => (
             <span key={item.name} className="text-gray-500">
               {item.name}
               {index < category.path.length - 1 && ' > '}
             </span>
           ))}
-          <span className="text-interactive pl-2">
+          <span className="text-interactive pl-8 hover:underline">
             <a
               href="#"
               onClick={(e) => {
@@ -31,6 +31,17 @@ function ParentCategory({ currentId, parent }) {
               }}
             >
               Change
+            </a>
+          </span>
+          <span className="text-critical pl-8 hover:underline">
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setCategory(null);
+              }}
+            >
+              Unlink
             </a>
           </span>
         </div>
@@ -48,23 +59,21 @@ function ParentCategory({ currentId, parent }) {
         </a>
       )}
       {selecting && (
-        <div className="absolute top-5 left-0 right-0 bg-[#eff2f5] z-50 border rounded border-[#c9cccf] p-[10px]">
-          <CategoryTree
-            selectedCategory={category}
-            setSelectedCategory={(c) => {
-              if (c.categoryId === currentId) {
-                return;
-              }
-              setCategory(c);
-              setSelecting(false);
-            }}
-          />
-        </div>
+        <CategoryTree
+          selectedCategory={category}
+          setSelectedCategory={(c) => {
+            if (c.categoryId === currentId) {
+              return;
+            }
+            setCategory(c);
+            setSelecting(false);
+          }}
+        />
       )}
       <input
         type="hidden"
         name="parent_id"
-        value={category?.categoryId || null}
+        value={category?.categoryId || ''}
       />
     </div>
   );
@@ -127,7 +136,7 @@ export default function General({
       sortOrder: 20
     },
     {
-      component: { default: CkeditorField },
+      component: { default: Editor },
       props: {
         id: 'description',
         name: 'description',
@@ -163,7 +172,20 @@ General.propTypes = {
   uploadApi: PropTypes.string.isRequired,
   category: PropTypes.shape({
     name: PropTypes.string,
-    description: PropTypes.string,
+    description: PropTypes.arrayOf(
+      PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        size: PropTypes.number.isRequired,
+        columns: PropTypes.arrayOf(
+          PropTypes.shape({
+            id: PropTypes.string.isRequired,
+            size: PropTypes.number.isRequired,
+            // eslint-disable-next-line react/forbid-prop-types
+            data: PropTypes.object.isRequired
+          })
+        )
+      })
+    ),
     categoryId: PropTypes.number,
     parent: PropTypes.shape({
       categoryId: PropTypes.number.isRequired,

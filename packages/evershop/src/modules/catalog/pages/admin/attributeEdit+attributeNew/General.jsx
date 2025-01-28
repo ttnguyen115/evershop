@@ -63,8 +63,8 @@ function Groups({ groups, createGroupApi }) {
 
   return (
     <div>
-      <div className="mb-1">Select groups the attribute belongs to</div>
-      <div className="grid gap-2 grid-cols-2">
+      <div className="mb-4">Select groups the attribute belongs to</div>
+      <div className="grid gap-8 grid-cols-2">
         <div>
           <Select
             name="groups[]"
@@ -74,7 +74,7 @@ function Groups({ groups, createGroupApi }) {
             defaultValue={groups}
           />
         </div>
-        <div className="grid gap-2 grid-cols-1">
+        <div className="grid gap-8 grid-cols-1">
           <div>
             <Input
               type="text"
@@ -120,7 +120,7 @@ Groups.propTypes = {
   createGroupApi: PropTypes.string.isRequired,
   groups: PropTypes.arrayOf(
     PropTypes.shape({
-      value: PropTypes.number,
+      value: PropTypes.string,
       label: PropTypes.string
     })
   ).isRequired
@@ -151,7 +151,7 @@ function Options({ originOptions = [] }) {
       {options.map((option, index) => {
         const { uuid, optionId, optionText } = option;
         return (
-          <div key={uuid} className="flex mb-05 space-x-2">
+          <div key={uuid} className="flex mb-2 space-x-8">
             <div>
               <Field
                 key={uuid}
@@ -179,7 +179,7 @@ function Options({ originOptions = [] }) {
           </div>
         );
       })}
-      <div className="mt-1">
+      <div className="mt-4">
         <a
           href="#"
           onClick={(e) => addOption(e)}
@@ -195,7 +195,7 @@ function Options({ originOptions = [] }) {
 Options.propTypes = {
   originOptions: PropTypes.arrayOf(
     PropTypes.shape({
-      optionId: PropTypes.number,
+      optionId: PropTypes.string,
       optionText: PropTypes.string
     })
   ).isRequired
@@ -274,7 +274,7 @@ export default function General({ attribute, createGroupApi }) {
       )}
       <Card.Session title="Attribute Group">
         <Groups
-          groups={get(attribute, 'groups', [])}
+          groups={get(attribute, 'groups.items', [])}
           createGroupApi={createGroupApi}
         />
       </Card.Session>
@@ -285,21 +285,23 @@ export default function General({ attribute, createGroupApi }) {
 General.propTypes = {
   attribute: PropTypes.shape({
     type: PropTypes.string.isRequired,
-    attribute_id: PropTypes.number,
-    attribute_name: PropTypes.string,
-    attribute_code: PropTypes.string,
+    attributeId: PropTypes.string,
+    attributeName: PropTypes.string,
+    attributeCode: PropTypes.string,
     options: PropTypes.arrayOf(
       PropTypes.shape({
-        optionId: PropTypes.number,
+        optionId: PropTypes.string,
         optionText: PropTypes.string
       })
     ),
-    groups: PropTypes.arrayOf(
-      PropTypes.shape({
-        value: PropTypes.number,
-        label: PropTypes.string
-      })
-    )
+    groups: PropTypes.shape({
+      items: PropTypes.arrayOf(
+        PropTypes.shape({
+          value: PropTypes.string,
+          label: PropTypes.string
+        })
+      )
+    })
   }),
   createGroupApi: PropTypes.string.isRequired
 };
@@ -328,8 +330,10 @@ export const query = `
         optionText
       }
       groups {
-        value: attributeGroupId
-        label: groupName
+        items {
+          value: attributeGroupId
+          label: groupName
+        }
       }
     }
     createGroupApi: url(routeId: "createAttributeGroup")

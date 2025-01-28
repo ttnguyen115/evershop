@@ -39,7 +39,7 @@ export default function Attributes({ product, groups: { items } }) {
                 value={currentGroup.groupId}
                 name="group_id"
               />
-              <div className="border rounded border-divider p-1">
+              <div className="border rounded border-divider p-4">
                 <span>{currentGroup.groupName}</span>
               </div>
               <div className="italic text-textSubdued">
@@ -66,7 +66,7 @@ export default function Attributes({ product, groups: { items } }) {
       <Card.Session title="Attributes">
         <table className="table table-auto">
           <tbody>
-            {currentGroup.attributes.map((attribute, index) => {
+            {currentGroup.attributes.items.map((attribute, index) => {
               const valueIndex = attributeIndex.find(
                 (idx) => idx.attributeId === attribute.attributeId
               );
@@ -208,36 +208,38 @@ Attributes.propTypes = {
   groups: PropTypes.shape({
     items: PropTypes.arrayOf(
       PropTypes.shape({
-        groupId: PropTypes.number,
+        groupId: PropTypes.string,
         groupName: PropTypes.string,
-        attributes: PropTypes.arrayOf(
-          PropTypes.shape({
-            attributeId: PropTypes.number,
-            attributeName: PropTypes.string,
-            attributeCode: PropTypes.string,
-            type: PropTypes.string,
-            isRequired: PropTypes.number,
-            options: PropTypes.arrayOf(
-              PropTypes.shape({
-                optionId: PropTypes.number,
-                optionText: PropTypes.string
-              })
-            )
-          })
-        )
+        attributes: PropTypes.shape({
+          items: PropTypes.arrayOf(
+            PropTypes.shape({
+              attributeId: PropTypes.string,
+              attributeName: PropTypes.string,
+              attributeCode: PropTypes.string,
+              type: PropTypes.string,
+              isRequired: PropTypes.number,
+              options: PropTypes.arrayOf(
+                PropTypes.shape({
+                  optionId: PropTypes.string,
+                  optionText: PropTypes.string
+                })
+              )
+            })
+          )
+        })
       })
     )
   }),
   product: PropTypes.shape({
     attributeIndex: PropTypes.arrayOf(
       PropTypes.shape({
-        attributeId: PropTypes.number,
+        attributeId: PropTypes.string,
         optionId: PropTypes.number,
         optionText: PropTypes.string
       })
     ),
-    groupId: PropTypes.number,
-    variantGroupId: PropTypes.number
+    groupId: PropTypes.string,
+    variantGroupId: PropTypes.string
   })
 };
 
@@ -252,7 +254,7 @@ export const layout = {
 };
 
 export const query = `
-  query Query {
+  query Query ($filters: [FilterInput!]) {
     product(id: getContextValue("productId", null)) {
       groupId
       variantGroupId
@@ -262,22 +264,29 @@ export const query = `
         optionText
       }
     },
-    groups: attributeGroups {
+    groups: attributeGroups(filters: $filters) {
       items {
         groupId: attributeGroupId
         groupName
         attributes {
-          attributeId
-          attributeName
-          attributeCode
-          type
-          isRequired
-          options {
-            optionId: attributeOptionId
-            optionText
+          items {
+            attributeId
+            attributeName
+            attributeCode
+            type
+            isRequired
+            options {
+              optionId: attributeOptionId
+              optionText
+            }
           }
         }
       }
     }
   }
 `;
+
+export const variables = `
+{
+  filters: [{ key: "limit", operation: 'eq', value: 1000 }]
+}`;

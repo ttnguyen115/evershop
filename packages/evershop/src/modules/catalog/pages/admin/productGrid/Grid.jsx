@@ -1,4 +1,4 @@
-/* eslint-disable react/no-unstable-nested-components */
+/* eslint-disable react/no-unstable-nested-components,no-nested-ternary */
 import PropTypes from 'prop-types';
 import React, { useState } from 'react';
 import axios from 'axios';
@@ -11,12 +11,13 @@ import StatusRow from '@components/common/grid/rows/StatusRow';
 import ProductPriceRow from '@components/admin/catalog/productGrid/rows/PriceRow';
 import BasicRow from '@components/common/grid/rows/BasicRow';
 import ThumbnailRow from '@components/admin/catalog/productGrid/rows/ThumbnailRow';
-import BasicColumnHeader from '@components/common/grid/headers/Basic';
-import FromToColumnHeader from '@components/common/grid/headers/FromTo';
-import DropdownColumnHeader from '@components/common/grid/headers/Dropdown';
 import { Card } from '@components/admin/cms/Card';
 import DummyColumnHeader from '@components/common/grid/headers/Dummy';
 import QtyRow from '@components/admin/catalog/productGrid/rows/QtyRow';
+import SortableHeader from '@components/common/grid/headers/Sortable';
+import { Form } from '@components/common/form/Form';
+import { Field } from '@components/common/form/Field';
+import Filter from '@components/common/list/Filter';
 
 function Actions({ products = [], selectedIds = [] }) {
   const { openAlert, closeAlert } = useAlertContext();
@@ -123,17 +124,18 @@ function Actions({ products = [], selectedIds = [] }) {
       {selectedIds.length > 0 && (
         <td style={{ borderTop: 0 }} colSpan="100">
           <div className="inline-flex border border-divider rounded justify-items-start">
-            <a href="#" className="font-semibold pt-075 pb-075 pl-15 pr-15">
+            <a href="#" className="font-semibold pt-3 pb-3 pl-6 pr-6">
               {selectedIds.length} selected
             </a>
-            {actions.map((action) => (
+            {actions.map((action, i) => (
               <a
+                key={i}
                 href="#"
                 onClick={(e) => {
                   e.preventDefault();
                   action.onAction();
                 }}
-                className="font-semibold pt-075 pb-075 pl-15 pr-15 block border-l border-divider self-center"
+                className="font-semibold pt-3 pb-3 pl-6 pr-6 block border-l border-divider self-center"
               >
                 <span>{action.name}</span>
               </a>
@@ -146,10 +148,10 @@ function Actions({ products = [], selectedIds = [] }) {
 }
 
 Actions.propTypes = {
-  selectedIds: PropTypes.arrayOf(PropTypes.number).isRequired,
+  selectedIds: PropTypes.arrayOf(PropTypes.string).isRequired,
   products: PropTypes.arrayOf(
     PropTypes.shape({
-      uuid: PropTypes.number.isRequired,
+      uuid: PropTypes.string.isRequired,
       updateApi: PropTypes.string.isRequired,
       deleteApi: PropTypes.string.isRequired
     })
@@ -160,16 +162,150 @@ export default function ProductGrid({
   products: { items: products, total, currentFilters = [] }
 }) {
   const page = currentFilters.find((filter) => filter.key === 'page')
-    ? currentFilters.find((filter) => filter.key === 'page').value
+    ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
     : 1;
 
   const limit = currentFilters.find((filter) => filter.key === 'limit')
-    ? currentFilters.find((filter) => filter.key === 'limit').value
+    ? parseInt(
+        currentFilters.find((filter) => filter.key === 'limit').value,
+        10
+      )
     : 20;
   const [selectedRows, setSelectedRows] = useState([]);
 
   return (
     <Card>
+      <Card.Session
+        title={
+          <Form submitBtn={false} id="productGridFilter">
+            <div className="flex gap-8 justify-center items-center">
+              <Area
+                id="productGridFilter"
+                noOuter
+                coreComponents={[
+                  {
+                    component: {
+                      default: () => (
+                        <Field
+                          name="keyword"
+                          type="text"
+                          id="keyword"
+                          placeholder="Search"
+                          value={
+                            currentFilters.find((f) => f.key === 'keyword')
+                              ?.value
+                          }
+                          onKeyPress={(e) => {
+                            // If the user press enter, we should submit the form
+                            if (e.key === 'Enter') {
+                              const url = new URL(document.location);
+                              const keyword =
+                                document.getElementById('keyword')?.value;
+                              if (keyword) {
+                                url.searchParams.set('keyword', keyword);
+                              } else {
+                                url.searchParams.delete('keyword');
+                              }
+                              window.location.href = url;
+                            }
+                          }}
+                        />
+                      )
+                    },
+                    sortOrder: 5
+                  },
+                  {
+                    component: {
+                      default: () => (
+                        <Filter
+                          options={[
+                            {
+                              label: 'Enabled',
+                              value: '1',
+                              onSelect: () => {
+                                const url = new URL(document.location);
+                                url.searchParams.set('status', 1);
+                                window.location.href = url;
+                              }
+                            },
+                            {
+                              label: 'Disabled',
+                              value: '0',
+                              onSelect: () => {
+                                const url = new URL(document.location);
+                                url.searchParams.set('status', 0);
+                                window.location.href = url;
+                              }
+                            }
+                          ]}
+                          selectedOption={
+                            currentFilters.find((f) => f.key === 'status')
+                              ? currentFilters.find((f) => f.key === 'status')
+                                  .value === '1'
+                                ? 'Enabled'
+                                : 'Disabled'
+                              : undefined
+                          }
+                          title="Status"
+                        />
+                      )
+                    },
+                    sortOrder: 10
+                  },
+                  {
+                    component: {
+                      default: () => (
+                        <Filter
+                          options={[
+                            {
+                              label: 'Simple',
+                              value: '1',
+                              onSelect: () => {
+                                const url = new URL(document.location);
+                                url.searchParams.set('type', 'simple');
+                                window.location.href = url;
+                              }
+                            },
+                            {
+                              label: 'Configurable',
+                              value: '0',
+                              onSelect: () => {
+                                const url = new URL(document.location);
+                                url.searchParams.set('type', 'configurable');
+                                window.location.href = url;
+                              }
+                            }
+                          ]}
+                          selectedOption={
+                            currentFilters.find((f) => f.key === 'type')
+                              ? currentFilters.find((f) => f.key === 'type')
+                                  .value
+                              : undefined
+                          }
+                          title="Product type"
+                        />
+                      )
+                    },
+                    sortOrder: 15
+                  }
+                ]}
+                currentFilters={currentFilters}
+              />
+            </div>
+          </Form>
+        }
+        actions={[
+          {
+            variant: 'interactive',
+            name: 'Clear filter',
+            onAction: () => {
+              const url = new URL(document.location);
+              url.search = '';
+              window.location.href = url.href;
+            }
+          }
+        ]}
+      />
       <table className="listing sticky">
         <thead>
           <tr>
@@ -189,15 +325,25 @@ export default function ProductGrid({
               noOuter
               coreComponents={[
                 {
-                  component: { default: () => <DummyColumnHeader /> },
+                  component: {
+                    default: () => (
+                      <th className="column">
+                        <div className="table-header id-header">
+                          <div className="font-medium uppercase text-xl">
+                            <span>Thumbnail</span>
+                          </div>
+                        </div>
+                      </th>
+                    )
+                  },
                   sortOrder: 5
                 },
                 {
                   component: {
                     default: () => (
-                      <BasicColumnHeader
-                        title="Product Name"
-                        id="name"
+                      <SortableHeader
+                        title="Name"
+                        name="name"
                         currentFilters={currentFilters}
                       />
                     )
@@ -207,9 +353,9 @@ export default function ProductGrid({
                 {
                   component: {
                     default: () => (
-                      <FromToColumnHeader
-                        id="price"
+                      <SortableHeader
                         title="Price"
+                        name="price"
                         currentFilters={currentFilters}
                       />
                     )
@@ -218,22 +364,16 @@ export default function ProductGrid({
                 },
                 {
                   component: {
-                    default: () => (
-                      <BasicColumnHeader
-                        title="SKU"
-                        id="sku"
-                        currentFilters={currentFilters}
-                      />
-                    )
+                    default: () => <DummyColumnHeader title="SKU" />
                   },
                   sortOrder: 20
                 },
                 {
                   component: {
                     default: () => (
-                      <FromToColumnHeader
-                        title="Qty"
-                        id="qty"
+                      <SortableHeader
+                        title="Stock"
+                        name="qty"
                         currentFilters={currentFilters}
                       />
                     )
@@ -243,14 +383,10 @@ export default function ProductGrid({
                 {
                   component: {
                     default: () => (
-                      <DropdownColumnHeader
-                        id="status"
+                      <SortableHeader
                         title="Status"
+                        name="status"
                         currentFilters={currentFilters}
-                        options={[
-                          { value: 1, text: 'Enabled' },
-                          { value: 0, text: 'Disabled' }
-                        ]}
                       />
                     )
                   },
@@ -432,6 +568,7 @@ export const query = `
         value
       }
     }
+    newProductUrl: url(routeId: "productNew")
   }
 `;
 

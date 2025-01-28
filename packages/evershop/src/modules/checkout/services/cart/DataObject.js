@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
-const isEqualWith = require('lodash/isEqualWith');
-const { error } = require('@evershop/evershop/src/lib/log/debuger');
+const isEqualWith = require('lodash.isequalwith');
+const { error } = require('@evershop/evershop/src/lib/log/logger');
 
 module.exports.DataObject = class DataObject {
   #fields;
@@ -80,7 +80,7 @@ module.exports.DataObject = class DataObject {
     }
   }
 
-  async setData(key, value) {
+  async setData(key, value, force = false) {
     this.#triggeredField = key;
     this.#requestedValue = value;
     if (this.isBuilding === true) {
@@ -91,7 +91,7 @@ module.exports.DataObject = class DataObject {
       throw new Error(`Field ${key} not existed`);
     }
 
-    if (isEqualWith(this.#data[key], value)) {
+    if (isEqualWith(this.#data[key], value) && !force) {
       return value;
     }
 
@@ -118,7 +118,7 @@ module.exports.DataObject = class DataObject {
   export() {
     const data = {};
     this.#fields.forEach((f) => {
-      data[f.key] = this.#data[f.key];
+      data[f.key] = structuredClone(this.#data[f.key]);
     });
     if (this.hasError()) {
       data.errors = Object.values(this.#errors);

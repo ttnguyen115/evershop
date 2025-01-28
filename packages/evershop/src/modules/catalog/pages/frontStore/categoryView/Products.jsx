@@ -5,13 +5,17 @@ import { _ } from '@evershop/evershop/src/lib/locale/translate';
 
 export default function Products({
   products: {
+    showProducts,
     products: { items }
   }
 }) {
+  if (!showProducts) {
+    return null;
+  }
   return (
     <div>
       <ProductList products={items} countPerRow={3} />
-      <span className="product-count italic block mt-2">
+      <span className="product-count italic block mt-8">
         {_('${count} products', { count: items.length })}
       </span>
     </div>
@@ -20,6 +24,7 @@ export default function Products({
 
 Products.propTypes = {
   products: PropTypes.shape({
+    showProducts: PropTypes.number,
     products: PropTypes.shape({
       items: PropTypes.arrayOf(
         PropTypes.shape({
@@ -28,11 +33,11 @@ Products.propTypes = {
           url: PropTypes.string,
           price: PropTypes.shape({
             regular: PropTypes.shape({
-              value: PropTypes.float,
+              value: PropTypes.number,
               text: PropTypes.string
             }),
             special: PropTypes.shape({
-              value: PropTypes.float,
+              value: PropTypes.number,
               text: PropTypes.string
             })
           }),
@@ -48,6 +53,7 @@ Products.propTypes = {
 
 Products.defaultProps = {
   products: {
+    showProducts: 1,
     products: {
       items: []
     }
@@ -62,6 +68,7 @@ export const layout = {
 export const query = `
   query Query($filters: [FilterInput]) {
     products: category(id: getContextValue('categoryId')) {
+      showProducts
       products(filters: $filters) {
         items {
           ...Product

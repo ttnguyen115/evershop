@@ -8,13 +8,14 @@ module.exports = {
     orders: async (_, { filters = [] }) => {
       const query = getOrdersBaseQuery();
       const root = new OrderCollection(query);
-      await root.init({}, { filters });
+      await root.init(filters);
       return root;
     }
   },
   Order: {
     editUrl: ({ uuid }) => buildUrl('orderEdit', { id: uuid }),
     createShipmentApi: ({ uuid }) => buildUrl('createShipment', { id: uuid }),
+    cancelApi: ({ uuid }) => buildUrl('cancelOrder', { id: uuid }),
     customerUrl: async ({ customerId }, _, { pool }) => {
       const customer = await select()
         .from('customer')

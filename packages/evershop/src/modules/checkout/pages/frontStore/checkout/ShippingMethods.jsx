@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 import { useClient } from 'urql';
 import { useFormContext } from '@components/common/form/Form';
 import { Field } from '@components/common/form/Field';
@@ -105,17 +106,37 @@ export default function ShippingMethods({
     async function saveMethods() {
       // Get the selected method
       const selectedMethod = methods.find((m) => m.selected === true);
-      const response = await axios.post(addShippingMethodApi, {
-        method_code: selectedMethod.code,
-        method_name: selectedMethod.name
-      });
-      if (!response.data.error) {
-        const result = await client.query(QUERY, { cartId }).toPromise();
-        const address = result.data.cart.shippingAddress;
-        completeStep(
-          'shipment',
-          `${address.address1}, ${address.city}, ${address.country.name}`
+      try {
+        const response = await axios.post(
+          addShippingMethodApi,
+          {
+            method_code: selectedMethod.code,
+            method_name: selectedMethod.name
+          },
+          {
+            validateStatus: () => true
+          }
         );
+        if (!response.data.error) {
+          const result = await client
+            .query(
+              QUERY,
+              { cartId },
+              {
+                requestPolicy: 'network-only'
+              }
+            )
+            .toPromise();
+          const address = result.data.cart.shippingAddress;
+          await completeStep(
+            'shipment',
+            `${address.address1}, ${address.city}, ${address.country.name}`
+          );
+        } else {
+          toast.error(response.data.error.message);
+        }
+      } catch (error) {
+        toast.error(error.message);
       }
     }
     if (formContext.state === 'submitSuccess') {
@@ -159,7 +180,7 @@ export default function ShippingMethods({
           </svg>
         </div>
       )}
-      <h4 className="mt-3 mb-1">{_('Shipping Method')}</h4>
+      <h4 className="mt-12 mb-4">{_('Shipping Method')}</h4>
       {addressProvided === true && methods.length === 0 && (
         <div className="text-center p-3 border border-divider rounded text-textSubdued">
           {_('Sorry, there is no available method for your address')}
@@ -171,7 +192,7 @@ export default function ShippingMethods({
         </div>
       )}
       {methods.length > 0 && (
-        <div className="divide-y border rounded border-divider p-1 mb-2">
+        <div className="divide-y border rounded border-divider p-4 mb-8">
           <Field
             type="radio"
             name="method"

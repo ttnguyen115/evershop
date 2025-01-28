@@ -4,7 +4,7 @@ import { ItemVariantOptions } from '@components/frontStore/checkout/cart/items/I
 import './Items.scss';
 import ProductNoThumbnail from '@components/common/ProductNoThumbnail';
 
-function Items({ items, displayCheckoutPriceIncludeTax }) {
+function Items({ items, priceIncludingTax }) {
   return (
     <div id="summary-items">
       <table className="listing items-table">
@@ -37,9 +37,9 @@ function Items({ items, displayCheckoutPriceIncludeTax }) {
               </td>
               <td>
                 <span>
-                  {displayCheckoutPriceIncludeTax
-                    ? item.total.text
-                    : item.subTotal.text}
+                  {priceIncludingTax
+                    ? item.lineTotalInclTax.text
+                    : item.lineTotal.text}
                 </span>
               </td>
             </tr>
@@ -53,17 +53,19 @@ function Items({ items, displayCheckoutPriceIncludeTax }) {
 Items.propTypes = {
   items: PropTypes.arrayOf(
     PropTypes.shape({
-      id: PropTypes.string.isRequired,
       productName: PropTypes.string.isRequired,
       qty: PropTypes.number.isRequired,
       thumbnail: PropTypes.string,
-      total: PropTypes.shape({
+      lineTotalInclTax: PropTypes.shape({
+        text: PropTypes.string.isRequired
+      }).isRequired,
+      lineTotal: PropTypes.shape({
         text: PropTypes.string.isRequired
       }).isRequired,
       variantOptions: PropTypes.string
     })
   ).isRequired,
-  displayCheckoutPriceIncludeTax: PropTypes.bool.isRequired
+  priceIncludingTax: PropTypes.bool.isRequired
 };
 
 export { Items };

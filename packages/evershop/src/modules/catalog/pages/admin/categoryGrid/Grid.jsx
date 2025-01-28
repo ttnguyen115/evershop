@@ -10,10 +10,11 @@ import { useAlertContext } from '@components/common/modal/Alert';
 import { Checkbox } from '@components/common/form/fields/Checkbox';
 import { Card } from '@components/admin/cms/Card';
 import CategoryNameRow from '@components/admin/catalog/categoryGrid/rows/CategoryName';
-import BasicColumnHeader from '@components/common/grid/headers/Basic';
-import DropdownColumnHeader from '@components/common/grid/headers/Dropdown';
 import StatusRow from '@components/common/grid/rows/StatusRow';
 import YesNoRow from '@components/common/grid/rows/YesNoRow';
+import SortableHeader from '@components/common/grid/headers/Sortable';
+import { Form } from '@components/common/form/Form';
+import { Field } from '@components/common/form/Field';
 
 function Actions({ categories = [], selectedIds = [] }) {
   const { openAlert, closeAlert } = useAlertContext();
@@ -61,7 +62,7 @@ function Actions({ categories = [], selectedIds = [] }) {
       {selectedIds.length > 0 && (
         <td style={{ borderTop: 0 }} colSpan="100">
           <div className="inline-flex border border-divider rounded justify-items-start">
-            <a href="#" className="font-semibold pt-075 pb-075 pl-15 pr-15">
+            <a href="#" className="font-semibold pt-3 pb-3 pl-6 pr-6">
               {selectedIds.length} selected
             </a>
             {actions.map((action, index) => (
@@ -72,7 +73,7 @@ function Actions({ categories = [], selectedIds = [] }) {
                   e.preventDefault();
                   action.onAction();
                 }}
-                className="font-semibold pt-075 pb-075 pl-15 pr-15 block border-l border-divider self-center"
+                className="font-semibold pt-3 pb-3 pl-6 pr-6 block border-l border-divider self-center"
               >
                 <span>{action.name}</span>
               </a>
@@ -97,15 +98,58 @@ export default function CategoryGrid({
   categories: { items: categories, total, currentFilters = [] }
 }) {
   const page = currentFilters.find((filter) => filter.key === 'page')
-    ? currentFilters.find((filter) => filter.key === 'page').value
+    ? parseInt(currentFilters.find((filter) => filter.key === 'page').value, 10)
     : 1;
   const limit = currentFilters.find((filter) => filter.key === 'limit')
-    ? currentFilters.find((filter) => filter.key === 'limit').value
+    ? parseInt(
+        currentFilters.find((filter) => filter.key === 'limit').value,
+        10
+      )
     : 20;
   const [selectedRows, setSelectedRows] = useState([]);
 
   return (
     <Card>
+      <Card.Session
+        title={
+          <Form submitBtn={false} id="categoryGridFilter">
+            <Field
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Search"
+              value={currentFilters.find((f) => f.key === 'name')?.value}
+              onKeyPress={(e) => {
+                // If the user press enter, we should submit the form
+                if (e.key === 'Enter') {
+                  const url = new URL(document.location);
+                  const name = document.getElementById('name')?.value;
+                  if (name) {
+                    url.searchParams.set('name[operation]', 'like');
+                    url.searchParams.set('name[value]', name);
+                  } else {
+                    url.searchParams.delete('name[operation]');
+                    url.searchParams.delete('name[value]');
+                  }
+                  window.location.href = url;
+                }
+              }}
+            />
+          </Form>
+        }
+        actions={[
+          {
+            variant: 'interactive',
+            name: 'Clear filter',
+            onAction: () => {
+              // Just get the url and remove all query params
+              const url = new URL(document.location);
+              url.search = '';
+              window.location.href = url.href;
+            }
+          }
+        ]}
+      />
       <table className="listing sticky">
         <thead>
           <tr>
@@ -128,9 +172,9 @@ export default function CategoryGrid({
                 {
                   component: {
                     default: () => (
-                      <BasicColumnHeader
+                      <SortableHeader
                         title="Category Name"
-                        id="name"
+                        name="name"
                         currentFilters={currentFilters}
                       />
                     )
@@ -140,14 +184,10 @@ export default function CategoryGrid({
                 {
                   component: {
                     default: () => (
-                      <DropdownColumnHeader
-                        id="status"
+                      <SortableHeader
+                        name="status"
                         title="Status"
                         currentFilters={currentFilters}
-                        options={[
-                          { value: 1, text: 'Enabled' },
-                          { value: 0, text: 'Disabled' }
-                        ]}
                       />
                     )
                   },
@@ -156,14 +196,10 @@ export default function CategoryGrid({
                 {
                   component: {
                     default: () => (
-                      <DropdownColumnHeader
-                        id="includeInNav"
+                      <SortableHeader
+                        name="include_in_nav"
                         title="Include In Menu"
                         currentFilters={currentFilters}
-                        options={[
-                          { value: 1, text: 'Yes' },
-                          { value: 0, text: 'No' }
-                        ]}
                       />
                     )
                   },
@@ -214,9 +250,7 @@ export default function CategoryGrid({
                   },
                   {
                     component: {
-                      default: ({ areaProps }) => (
-                        <YesNoRow id="includeInNav" areaProps={areaProps} />
-                      )
+                      default: () => <YesNoRow value={c.includeInNav} />
                     },
                     sortOrder: 30
                   }

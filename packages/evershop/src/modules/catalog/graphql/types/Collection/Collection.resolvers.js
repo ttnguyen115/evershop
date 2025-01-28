@@ -1,3 +1,4 @@
+const { v4: uuidv4 } = require('uuid');
 const { select } = require('@evershop/postgres-query-builder');
 const { camelCase } = require('@evershop/evershop/src/lib/util/camelCase');
 const { ProductCollection } = require('../../../services/ProductCollection');
@@ -22,7 +23,7 @@ module.exports = {
     collections: async (_, { filters = [] }) => {
       const query = getCollectionsBaseQuery();
       const root = new CollectionCollection(query);
-      await root.init({}, { filters });
+      await root.init(filters);
       return root;
     }
   },
@@ -30,8 +31,41 @@ module.exports = {
     products: async (collection, { filters = [] }, { user }) => {
       const query = getProductsByCollectionBaseQuery(collection.collectionId);
       const root = new ProductCollection(query);
-      await root.init(collection, { filters }, { user });
+      await root.init(filters, !!user);
       return root;
+    },
+    description: ({ description }) => {
+      try {
+        return JSON.parse(description);
+      } catch (e) {
+        // This is for backward compatibility. If the description is not a JSON string then it is a raw HTML block
+        const rowId = `r__${uuidv4()}`;
+        return [
+          {
+            size: 1,
+            id: rowId,
+            columns: [
+              {
+                id: 'c__c5d90067-c786-4324-8e24-8e30520ac3d7',
+                size: 1,
+                data: {
+                  time: 1723347125344,
+                  blocks: [
+                    {
+                      id: 'AU89ItzUa7',
+                      type: 'raw',
+                      data: {
+                        html: description
+                      }
+                    }
+                  ],
+                  version: '2.30.2'
+                }
+              }
+            ]
+          }
+        ];
+      }
     }
   },
   Product: {

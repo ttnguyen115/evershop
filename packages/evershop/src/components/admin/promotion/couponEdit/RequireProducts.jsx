@@ -86,8 +86,7 @@ export function RequiredProducts({ requiredProducts }) {
         </thead>
         <tbody>
           {products.map((p, i) => (
-            // eslint-disable-next-line react/no-array-index-key
-            <tr key={i}>
+            <tr key={`${p.key}-${p.operator}-${p.value}-${p.qty}-${i}`}>
               <td>
                 <div className="form-field-container dropdown">
                   <div className="field-wrapper">
@@ -394,7 +393,7 @@ export function RequiredProducts({ requiredProducts }) {
           ))}
         </tbody>
       </table>
-      <div className="mt-1 flex justify-start">
+      <div className="mt-4 flex justify-start">
         <div className="items-center flex">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -412,7 +411,7 @@ export function RequiredProducts({ requiredProducts }) {
             />
           </svg>
         </div>
-        <div className="pl-1">
+        <div className="pl-4">
           <a href="#" onClick={(e) => addProduct(e)}>
             <span>Add product</span>
           </a>

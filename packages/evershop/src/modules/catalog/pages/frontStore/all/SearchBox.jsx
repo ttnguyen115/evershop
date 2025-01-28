@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import React, { useRef, useState } from 'react';
 import { Input } from '@components/common/form/fields/Input';
 import XIcon from '@heroicons/react/solid/esm/XIcon';
+import { _ } from '@evershop/evershop/src/lib/locale/translate';
 import './SearchBox.scss';
 
 export default function SearchBox({ searchPageUrl }) {
@@ -16,6 +17,12 @@ export default function SearchBox({ searchPageUrl }) {
     setKeyword(key);
   }, []);
 
+  React.useEffect(() => {
+    if (showing) {
+      InputRef.current.focus();
+    }
+  }, [showing]);
+
   return (
     <div className="search-box">
       <a
@@ -24,7 +31,6 @@ export default function SearchBox({ searchPageUrl }) {
         onClick={(e) => {
           e.preventDefault();
           setShowing(!showing);
-          InputRef.current.focus();
         }}
       >
         <svg
@@ -72,9 +78,9 @@ export default function SearchBox({ searchPageUrl }) {
                   />
                 </svg>
               }
-              placeholder="Search"
+              placeholder={_('Search')}
               ref={InputRef}
-              value={keyword}
+              value={keyword || ''}
               onChange={(e) => {
                 setKeyword(e.target.value);
               }}
@@ -87,6 +93,7 @@ export default function SearchBox({ searchPageUrl }) {
                   window.location.href = url;
                 }
               }}
+              enterkeyhint="done"
             />
           </div>
         </div>

@@ -16,7 +16,7 @@ const {
 const {
   getConnection
 } = require('@evershop/evershop/src/lib/postgres/connection');
-const { debug } = require('@evershop/evershop/src/lib/log/debuger');
+const { error } = require('@evershop/evershop/src/lib/log/logger');
 const { getAjv } = require('../../../base/services/getAjv');
 const productDataSchema = require('./productDataSchema.json');
 
@@ -51,6 +51,12 @@ async function updateProductInventory(inventoryData, productId, connection) {
   }
 }
 
+/**
+ * @param {number} productId
+ * @param {[{attribute_code: string, value}]} attributes
+ * @param {*} connection
+ * @returns
+ */
 async function saveProductAttributes(productId, attributes, connection) {
   for (let i = 0; i < attributes.length; i += 1) {
     const attribute = attributes[i];
@@ -248,7 +254,7 @@ async function updateProductImages(images, productId, connection) {
         )
       );
     } catch (e) {
-      debug('critical', e);
+      error(e);
       throw e;
     }
   }

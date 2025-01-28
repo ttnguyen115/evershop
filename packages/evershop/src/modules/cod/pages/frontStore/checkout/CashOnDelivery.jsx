@@ -1,6 +1,9 @@
 import PropTypes from 'prop-types';
-import React from 'react';
-import { useCheckout } from '@components/common/context/checkout';
+import React, { useEffect } from 'react';
+import {
+  useCheckout,
+  useCheckoutDispatch
+} from '@components/common/context/checkout';
 import CODLogo from '@components/frontStore/cod/CODLogo';
 
 export function COD({ orderId, checkoutSuccessUrl }) {
@@ -26,20 +29,34 @@ COD.defaultProps = {
 export default function CashOnDeliveryMethod() {
   const checkout = useCheckout();
   const {
+    steps,
     paymentMethods,
     setPaymentMethods,
     orderPlaced,
     orderId,
     checkoutSuccessUrl
   } = checkout;
+  const { placeOrder } = useCheckoutDispatch();
   // Get the selected payment method
   const selectedPaymentMethod = paymentMethods
     ? paymentMethods.find((paymentMethod) => paymentMethod.selected)
     : undefined;
 
+  useEffect(() => {
+    const selectedPaymentMethod = paymentMethods.find(
+      (paymentMethod) => paymentMethod.selected
+    );
+    if (
+      steps.every((step) => step.isCompleted) &&
+      selectedPaymentMethod.code === 'cod'
+    ) {
+      placeOrder();
+    }
+  }, [steps]);
+
   return (
     <div>
-      <div className="flex justify-start items-center gap-1">
+      <div className="flex justify-start items-center gap-4">
         {(!selectedPaymentMethod || selectedPaymentMethod.code !== 'cod') && (
           <a
             href="#"

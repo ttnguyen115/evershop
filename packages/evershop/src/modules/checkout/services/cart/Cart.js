@@ -7,10 +7,13 @@ const {
 const { select } = require('@evershop/postgres-query-builder');
 const { pool } = require('@evershop/evershop/src/lib/postgres/connection');
 const { v4: uuidv4 } = require('uuid');
-const { DataObject } = require('./DataObject');
 const {
-  getProductsBaseQuery
-} = require('../../../catalog/services/getProductsBaseQuery');
+  translate
+} = require('@evershop/evershop/src/lib/locale/translate/translate');
+const { DataObject } = require('./DataObject');
+const addCartItem = require('../addCartItem');
+const removeCartItem = require('../removeCartItem');
+const updateCartItemQty = require('../updateCartItemQty');
 // eslint-disable-next-line no-multi-assign
 module.exports = exports = {};
 
@@ -19,19 +22,17 @@ class Item extends DataObject {
 
   #product;
 
-  constructor(theCart, initialData = {}) {
+  constructor(cart, initialData = {}) {
     super(getValueSync('cartItemFields', []), initialData);
-    this.#cart = theCart;
+    this.#cart = cart;
   }
 
   async getProduct() {
     if (this.#product) {
       return this.#product;
     }
-    const productQuery = getProductsBaseQuery();
-    const product = await productQuery
-      .where('product_id', '=', this.getData('product_id'))
-      .load(pool);
+    const loaderFunction = getValueSync('cartItemProductLoaderFunction');
+    const product = await loaderFunction(this.getData('product_id'));
     this.#product = product;
     return product;
   }
@@ -62,67 +63,81 @@ class Cart extends DataObject {
     return this.getData('items') ?? [];
   }
 
-  async addItem(productID, qty) {
-    const item = await this.createItem(productID, parseInt(qty, 10));
-    if (item.hasError()) {
-      // Get the first error from the item.getErrors() object
-      throw new Error(Object.values(item.getErrors())[0]);
-    } else {
-      let items = this.getItems();
-      let duplicateItem;
-      for (let i = 0; i < items.length; i += 1) {
-        if (items[i].getData('product_sku') === item.getData('product_sku')) {
-          // eslint-disable-next-line no-await-in-loop
-          await items[i].setData(
-            'qty',
-            item.getData('qty') + items[i].getData('qty')
-          );
-          if (items[i].hasError()) {
-            throw new Error(Object.values(items[i].getErrors())[0]);
-          }
-          duplicateItem = items[i];
-        }
-      }
-
-      if (!duplicateItem) {
-        items = items.concat(item);
-      }
-      await this.setData('items', items);
-      return duplicateItem || item;
-    }
-  }
-
   /**
-   * @param {string||int} uuid
+   * @param {string||int} productID
+   * @param {int} qty
+   * @param {object} context
    * @returns {Item}
    * @throws {Error}
    */
-  async removeItem(uuid) {
-    const items = this.getItems();
-    const item = this.getItem(uuid);
-    const newItems = items.filter((i) => i.getData('uuid') !== uuid);
-    if (item) {
-      await this.setData('items', newItems);
-      return item;
-    } else {
-      throw new Error('Item not found');
-    }
+  async addItem(productID, qty, context) {
+    const addedItem = await addCartItem(this, productID, qty, context);
+    return addedItem;
   }
 
-  async createItem(productID, qty) {
-    // Make sure the qty is a number and greater than 0
-    if (typeof qty !== 'number' || qty <= 0) {
-      throw new Error('Invalid quantity');
+  /**
+   * @param {string} uuid
+   * @returns {Item}
+   * @throws {Error}
+   */
+  async removeItem(uuid, context) {
+    const removedItem = await removeCartItem(this, uuid, context);
+    return removedItem;
+  }
+
+  /**
+   * @param {string} sku
+   * @returns {Item}
+   * @throws {Error}
+   */
+  async removeItemBySku(sku, context) {
+    const items = this.getItems();
+    const item = items.find((i) => i.getData('product_sku') === sku);
+    if (item) {
+      const removedItem = await removeCartItem(
+        this,
+        item.getData('uuid'),
+        context
+      );
+      return removedItem;
     }
-    const productQuery = getProductsBaseQuery();
-    const product = await productQuery
-      .where('product_id', '=', productID)
-      .load(pool);
-    if (!product) {
-      throw new Error('Product not found');
+    throw new Error('Item not found');
+  }
+
+  async updateItemQty(uuid, qty, action, context) {
+    const updatedItem = await updateCartItemQty(
+      this,
+      uuid,
+      qty,
+      action,
+      context
+    );
+    return updatedItem;
+  }
+
+  async updateItemQtyBySku(sku, qty, action, context) {
+    const items = this.getItems();
+    const item = items.find((i) => i.getData('product_sku') === sku);
+    if (item) {
+      const updatedItem = await updateCartItemQty(
+        this,
+        item.getData('uuid'),
+        qty,
+        action,
+        context
+      );
+      return updatedItem;
+    }
+    throw new Error('Item not found');
+  }
+
+  async createItem(productId, qty) {
+    // Make sure the qty is a number, not NaN and greater than 0
+    if (typeof qty !== 'number' || Number.isNaN(qty) || qty <= 0) {
+      throw new Error(translate('Invalid quantity'));
     }
     const item = new Item(this, {
-      product_id: productID,
+      product_id: productId,
       qty
     });
     await item.build();

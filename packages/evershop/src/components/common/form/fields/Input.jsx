@@ -24,10 +24,14 @@ const inputProps = function buidProps(props) {
     'onKeyPress',
     'onKeyDown',
     'onKeyUp',
-    'value'
+    'value',
+    'id',
+    'defaultValue',
+    'enterkeyhint'
   ].forEach((a) => {
-    if (props[a]) obj[a] = props[a];
-    obj.defaultValue = props.value;
+    if (props[a] !== undefined) {
+      obj[a] = props[a];
+    }
   });
 
   return obj;
@@ -58,7 +62,7 @@ Input.propTypes = {
   label: PropTypes.string,
   name: PropTypes.string,
   prefix: PropTypes.node,
-  suffix: PropTypes.string,
+  suffix: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
   value: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
 };
 

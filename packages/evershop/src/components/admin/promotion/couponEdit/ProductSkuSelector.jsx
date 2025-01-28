@@ -46,13 +46,13 @@ function ProductSkuSelector({
     variables: {
       filters: inputValue
         ? [
-            { key: 'keyword', operation: '=', value: inputValue },
-            { key: 'page', operation: '=', value: page.toString() },
-            { key: 'limit', operation: '=', value: limit.toString() }
+            { key: 'keyword', operation: 'eq', value: inputValue },
+            { key: 'page', operation: 'eq', value: page.toString() },
+            { key: 'limit', operation: 'eq', value: limit.toString() }
           ]
         : [
-            { key: 'limit', operation: '=', value: limit.toString() },
-            { key: 'page', operation: '=', value: page.toString() }
+            { key: 'limit', operation: 'eq', value: limit.toString() },
+            { key: 'page', operation: 'eq', value: page.toString() }
           ]
     },
     pause: true
@@ -109,10 +109,10 @@ function ProductSkuSelector({
       <div className="modal-content">
         <Card.Session>
           <div>
-            <div className="border rounded border-divider mb-2">
+            <div className="border rounded border-divider mb-8">
               <input
                 type="text"
-                value={inputValue}
+                value={inputValue || ''}
                 placeholder="Search products"
                 onChange={(e) => {
                   setInputValue(e.target.value);
@@ -141,10 +141,31 @@ function ProductSkuSelector({
                 {data.products.items.map((product) => (
                   <div
                     key={product.uuid}
-                    className="grid grid-cols-8 gap-2 py-1 border-divider items-center"
+                    className="grid grid-cols-8 gap-8 py-4 border-divider items-center"
                   >
                     <div className="col-span-1">
-                      <img src={product.image?.url} alt={product.name} />
+                      <div className="text-border border border-divider p-3 rounded flex justify-center">
+                        {product.image?.url && (
+                          <img src={product.image?.url} alt={product.name} />
+                        )}
+                        {!product.image?.url && (
+                          <svg
+                            className="self-center"
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="2rem"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                            />
+                          </svg>
+                        )}
+                      </div>
                     </div>
                     <div className="col-span-5">
                       <h3>{product.name}</h3>
@@ -192,9 +213,9 @@ function ProductSkuSelector({
         </Card.Session>
       </div>
       <Card.Session>
-        <div className="flex justify-between gap-2">
+        <div className="flex justify-between gap-8">
           <SimplePageination
-            total={data?.products.total}
+            total={data?.products.total || 0}
             count={data?.products?.items?.length || 0}
             page={page}
             hasNext={limit * page < data?.products.total}

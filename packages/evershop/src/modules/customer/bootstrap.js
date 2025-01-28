@@ -1,10 +1,16 @@
 const { request } = require('express');
 const config = require('config');
-const { pool } = require('@evershop/evershop/src/lib/postgres/connection');
-const { select } = require('@evershop/postgres-query-builder');
-const { comparePassword } = require('../../lib/util/passwordHelper');
+const { merge } = require('@evershop/evershop/src/lib/util/merge');
 const { translate } = require('../../lib/locale/translate/translate');
 const { addProcessor } = require('../../lib/util/registry');
+const registerDefaultCustomerCollectionFilters = require('./services/registerDefaultCustomerCollectionFilters');
+const {
+  defaultPaginationFilters
+} = require('../../lib/util/defaultPaginationFilters');
+const registerDefaultCustomerGroupCollectionFilters = require('./services/registerDefaultCustomerGroupCollectionFilters');
+const { hookable } = require('../../lib/util/hookable');
+const loginCustomerWithEmail = require('./services/customer/loginCustomerWithEmail');
+const logoutCustomer = require('./services/customer/logoutCustomer');
 
 module.exports = () => {
   addProcessor('cartFields', (fields) => {
@@ -65,35 +71,17 @@ module.exports = () => {
    * @param {*} password
    * @param {*} callback
    */
-  request.loginCustomerWithEmail = async function loginCustomerWithEmail(
+  request.loginCustomerWithEmail = async function login(
     email,
     password,
     callback
   ) {
-    // Escape the email to prevent SQL injection
-    const customerEmail = email.replace(/%/g, '\\%');
-    const customer = await select()
-      .from('customer')
-      .where('email', 'ILIKE', customerEmail)
-      .and('status', '=', 1)
-      .load(pool);
-
-    const result = comparePassword(password, customer ? customer.password : '');
-    if (!customer || !result) {
-      throw new Error(translate('Invalid email or password'));
-    }
-    this.session.customerID = customer.customer_id;
-    // Delete the password field
-    delete customer.password;
-    // Save the customer in the request
-    this.locals.customer = customer;
+    await hookable(loginCustomerWithEmail.bind(this))(email, password);
     this.session.save(callback);
   };
 
-  request.logoutCustomer = function logoutCustomer(callback) {
-    this.session.customerID = undefined;
-    this.locals.customer = undefined;
-
+  request.logoutCustomer = function logout(callback) {
+    hookable(logoutCustomer.bind(this))();
     this.session.save(callback);
   };
 
@@ -105,8 +93,25 @@ module.exports = () => {
     return this.locals?.customer;
   };
 
-  // Customer configuration
-  const customerConfig = {
+  addProcessor('configuratonSchema', (schema) => {
+    merge(schema, {
+      properties: {
+        customer: {
+          type: 'object',
+          properties: {
+            addressSchema: {
+              type: 'object',
+              additionalProperties: true
+            }
+          }
+        }
+      }
+    });
+    return schema;
+  });
+
+  // Default customer configuration
+  const defaultCustomerConfig = {
     addressSchema: {
       type: 'object',
       properties: {
@@ -134,6 +139,10 @@ module.exports = () => {
         },
         postcode: {
           type: ['string', 'number']
+        },
+        is_default: {
+          type: 'integer',
+          enum: [0, 1, '0', '1']
         }
       },
       required: [
@@ -154,5 +163,29 @@ module.exports = () => {
       additionalProperties: true
     }
   };
-  config.util.setModuleDefaults('customer', customerConfig);
+  config.util.setModuleDefaults('customer', defaultCustomerConfig);
+
+  // Reigtering the default filters for customer collection
+  addProcessor(
+    'customerCollectionFilters',
+    registerDefaultCustomerCollectionFilters,
+    1
+  );
+  addProcessor(
+    'customerCollectionFilters',
+    (filters) => [...filters, ...defaultPaginationFilters],
+    2
+  );
+
+  // Reigtering the default filters for customer group collection
+  addProcessor(
+    'customerGroupCollectionFilters',
+    registerDefaultCustomerGroupCollectionFilters,
+    1
+  );
+  addProcessor(
+    'customerGroupCollectionFilters',
+    (filters) => [...filters, ...defaultPaginationFilters],
+    2
+  );
 };

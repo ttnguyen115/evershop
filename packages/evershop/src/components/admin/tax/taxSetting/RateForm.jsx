@@ -50,7 +50,7 @@ function MethodForm({ saveRateApi, closeModal, getTaxClasses, rate }) {
         }}
       >
         <Card.Session title="Basic">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-8">
             <div>
               <Field
                 name="name"
@@ -75,7 +75,7 @@ function MethodForm({ saveRateApi, closeModal, getTaxClasses, rate }) {
           </div>
         </Card.Session>
         <Card.Session title="Setup shipping cost">
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-8">
             <div>
               <Field
                 name="country"
@@ -107,17 +107,17 @@ function MethodForm({ saveRateApi, closeModal, getTaxClasses, rate }) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-2">
+          <div className="grid grid-cols-2 gap-8 mt-8">
             <div>
               <Toggle
                 name="is_compound"
                 label="Is compound"
-                value={rate?.isCompound}
+                value={rate?.isCompound || false}
               />
             </div>
             <div />
           </div>
-          <div className="grid grid-cols-2 gap-2 mt-2">
+          <div className="grid grid-cols-2 gap-8 mt-8">
             <div>
               <Field
                 name="priority"
@@ -132,7 +132,7 @@ function MethodForm({ saveRateApi, closeModal, getTaxClasses, rate }) {
           </div>
         </Card.Session>
         <Card.Session>
-          <div className="flex justify-end gap-1">
+          <div className="flex justify-end gap-4">
             <Button title="Cancel" variant="secondary" onAction={closeModal} />
             <Button
               title="Save"
@@ -159,12 +159,12 @@ MethodForm.propTypes = {
   getTaxClasses: PropTypes.func.isRequired,
   rate: PropTypes.shape({
     name: PropTypes.string,
-    rate: PropTypes.string,
+    rate: PropTypes.number,
     country: PropTypes.string,
     province: PropTypes.string,
     postcode: PropTypes.string,
     isCompound: PropTypes.bool,
-    priority: PropTypes.string
+    priority: PropTypes.number
   })
 };
 

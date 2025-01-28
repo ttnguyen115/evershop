@@ -12,8 +12,8 @@ function Title({ title }) {
   if (items.length <= 0) return null;
 
   return (
-    <div className="mb-3 text-center shopping-cart-heading">
-      <h1 className="shopping-cart-title mb-05">{title}</h1>
+    <div className="mb-12 text-center shopping-cart-heading">
+      <h1 className="shopping-cart-title mb-2">{title}</h1>
       <a href="/" className="underline">
         {_('Continue Shopping')}
       </a>
@@ -25,7 +25,7 @@ Title.propTypes = {
   title: PropTypes.string.isRequired
 };
 
-export default function ShoppingCart({ cart, setting, removeUrl }) {
+export default function ShoppingCart({ cart, setting }) {
   const { totalQty = 0, items = [] } = cart || {};
   if (totalQty <= 0) {
     return <Empty />;
@@ -46,14 +46,14 @@ export default function ShoppingCart({ cart, setting, removeUrl }) {
             ]}
           />
           <div className="cart-page-middle">
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-4">
+            <div className="grid gap-16 grid-cols-1 md:grid-cols-4">
               <Area
                 id="shoppingCartLeft"
                 className="col-span-1 md:col-span-3"
                 coreComponents={[
                   {
                     component: { default: Items },
-                    props: { items, setting, cartId: cart.uuid, removeUrl },
+                    props: { items, setting },
                     sortOrder: 10,
                     id: 'shoppingCartTitle'
                   }
@@ -77,14 +77,13 @@ ShoppingCart.propTypes = {
     uuid: PropTypes.string.isRequired
   }).isRequired,
   setting: PropTypes.shape({
-    displayCheckoutPriceIncludeTax: PropTypes.bool
-  }).isRequired,
-  removeUrl: PropTypes.string.isRequired
+    priceIncludingTax: PropTypes.bool
+  }).isRequired
 };
 
 export const layout = {
   areaId: 'content',
-  sortOrder: 1
+  sortOrder: 10
 };
 
 export const query = `
@@ -116,20 +115,29 @@ export const query = `
           value
           text
         }
-        subTotal {
+        lineTotal {
           value
           text
         }
-        total {
+        lineTotal {
+          value
+          text
+        }
+        lineTotalInclTax {
+          value
+          text
+        }
+        lineTotalInclTax {
           value
           text
         }
         removeApi
+        updateQtyApi
         errors
       }
     }
     setting {
-      displayCheckoutPriceIncludeTax
+      priceIncludingTax
     }
   }
 `;

@@ -38,7 +38,7 @@ export default function AddTrackingButton({ order: { shipment }, carriers }) {
                     });
                   }}
                 >
-                  <div className="grid grid-cols-2 gap-1">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Field
                         formId="edit-tracking-info"
@@ -99,7 +99,7 @@ AddTrackingButton.propTypes = {
       carrier: PropTypes.string,
       trackingNumber: PropTypes.string,
       updateShipmentApi: PropTypes.string.isRequired
-    }).isRequired
+    })
   }).isRequired,
   carriers: PropTypes.arrayOf(
     PropTypes.shape({
